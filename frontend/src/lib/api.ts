@@ -38,7 +38,7 @@ export interface AnalysisResult {
   page_title?: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export async function analyzeText(text: string): Promise<AnalysisResult> {
   const res = await fetch(`${API_BASE}/analyze/text`, {
