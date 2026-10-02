@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   FileText,
@@ -9,17 +10,10 @@ import {
   UploadCloud,
   X,
   AlertCircle,
-  ArrowLeft,
   RotateCcw,
   Printer,
   Sparkles,
-  ExternalLink,
-  ChevronDown,
-  Info,
-  CheckCircle2,
-  AlertTriangle,
-  AlertOctagon,
-  Copy
+  Info
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -50,7 +44,6 @@ export default function PeriksaPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [selectedIndicator, setSelectedIndicator] = useState<IndicatorItem | null>(null);
-  const [copiedRaw, setCopiedRaw] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,8 +99,9 @@ export default function PeriksaPage() {
       try {
         const res = await analyzeText(trimmed);
         setResult(res);
-      } catch (err: any) {
-        setErrorMsg(err.message || "Gagal menganalisis teks lowongan.");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Gagal menganalisis teks lowongan.";
+        setErrorMsg(message);
       } finally {
         setIsLoading(false);
       }
@@ -126,11 +120,11 @@ export default function PeriksaPage() {
       try {
         const res = await analyzeUrl(trimmedUrl);
         setResult(res);
-      } catch (err: any) {
-        setErrorMsg(
-          err.message ||
-            "Kami belum dapat membaca lowongan dari tautan ini. Silakan salin teks lowongan dan tempelkan ke tab Teks."
-        );
+      } catch (err: unknown) {
+        const message = err instanceof Error
+          ? err.message
+          : "Kami belum dapat membaca lowongan dari tautan ini. Silakan salin teks lowongan dan tempelkan ke tab Teks.";
+        setErrorMsg(message);
       } finally {
         setIsLoading(false);
       }
@@ -144,11 +138,11 @@ export default function PeriksaPage() {
       try {
         const res = await analyzePhoto(selectedFile);
         setResult(res);
-      } catch (err: any) {
-        setErrorMsg(
-          err.message ||
-            "Kami belum dapat membaca teks foto ini dengan jelas. Silakan tempel teks lowongan secara manual pada tab Teks."
-        );
+      } catch (err: unknown) {
+        const message = err instanceof Error
+          ? err.message
+          : "Kami belum dapat membaca teks foto ini dengan jelas. Silakan pilih gambar yang lebih jelas atau gunakan tab Teks.";
+        setErrorMsg(message);
       } finally {
         setIsLoading(false);
       }
@@ -344,9 +338,12 @@ export default function PeriksaPage() {
                     ) : (
                       <div className="space-y-4">
                         <div className="relative rounded-2xl border border-slate-200 overflow-hidden bg-slate-900/5 max-h-96 flex items-center justify-center p-2">
-                          <img
+                          <Image
                             src={filePreview}
                             alt="Screenshot preview"
+                            width={1200}
+                            height={800}
+                            unoptimized
                             className="max-h-80 w-auto object-contain rounded-lg"
                           />
                           <button
@@ -381,7 +378,7 @@ export default function PeriksaPage() {
                     <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-500 flex items-start gap-2">
                       <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                       <span>
-                        Alur pemrosesan: Foto → OCR Text Extraction → Pemeriksaan 10 Indikator Risiko → Risk Assessment.
+                        Sistem akan membaca teks dari foto secara otomatis. Setelah analisis selesai, Anda dapat mengecek teks yang berhasil diekstrak di laporan hasil.
                       </span>
                     </div>
                   </div>
@@ -541,18 +538,17 @@ export default function PeriksaPage() {
                   </div>
                 </div>
 
-                {/* Raw Input Toggle Preview */}
-                {result.raw_input && (
+                {/* Extracted text preview */}
+                {(result.extracted_text || result.raw_input) && (
                   <div className="mt-5 pt-4 border-t border-slate-100">
-                    <details className="text-xs text-slate-500 group">
-                      <summary className="cursor-pointer font-medium text-slate-600 hover:text-slate-900 flex items-center justify-between">
-                        <span>Lihat kutipan teks asli lowongan</span>
-                        <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
-                      </summary>
-                      <div className="mt-2.5 p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-xs font-mono max-h-36 overflow-y-auto whitespace-pre-wrap leading-relaxed">
-                        {result.extracted_text || result.raw_input}
-                      </div>
-                    </details>
+                    <div className="mb-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        Teks Hasil OCR / Ekstraksi
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-xs font-mono max-h-48 overflow-y-auto whitespace-pre-wrap leading-relaxed">
+                      {result.extracted_text || result.raw_input}
+                    </div>
                   </div>
                 )}
               </div>

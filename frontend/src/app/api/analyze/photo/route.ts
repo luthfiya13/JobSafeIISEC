@@ -14,7 +14,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // If fallback text provided (or mock extracted sample)
     if (fallbackText && fallbackText.trim().length >= 15) {
       const result = analyzeJobText(fallbackText);
       return NextResponse.json({
@@ -24,15 +23,40 @@ export async function POST(req: Request) {
       });
     }
 
-    // In serverless environment without Tesseract binary:
-    // Prompt user friendly message to copy text
+    const backendUrl = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api").replace(/\/$/, "");
+
+    try {
+      const backendFormData = new FormData();
+      backendFormData.append("file", file, file.name);
+      if (fallbackText && fallbackText.trim()) {
+        backendFormData.append("fallback_text", fallbackText.trim());
+      }
+
+      const backendRes = await fetch(`${backendUrl}/analyze/photo`, {
+        method: "POST",
+        body: backendFormData,
+      });
+
+      const backendData = await backendRes.json().catch(() => null);
+
+      if (backendRes.ok && backendData) {
+        return NextResponse.json(backendData);
+      }
+
+      if (backendData?.detail) {
+        return NextResponse.json({ detail: backendData.detail }, { status: backendRes.status || 400 });
+      }
+    } catch {
+      // backend not running yet; fallback to friendly manual-text prompt
+    }
+
     return NextResponse.json(
       {
-        detail: "Fitur pemindaian OCR gambar serverless menyarankan untuk menyalin teks lowongan ke tab Teks agar akurasi deteksi 10 indikator mencapai hasil maksimal."
+        detail: "Fitur pemindaian OCR dari foto sedang menunggu backend OCR aktif. Silakan tempel teks lowongan ke tab Teks agar analisis dapat dilanjutkan."
       },
       { status: 400 }
     );
-  } catch (err: any) {
+  } catch {
     return NextResponse.json(
       { detail: "Gagal memproses gambar." },
       { status: 500 }
