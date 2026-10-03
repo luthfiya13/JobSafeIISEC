@@ -1,5 +1,28 @@
 import { NextResponse } from "next/server";
+import Tesseract from "tesseract.js";
 import { analyzeJobText } from "@/lib/analyzer";
+
+export const runtime = "nodejs";
+
+function normalizeExtractedText(text: string) {
+  return text
+    .replace(/\r/g, "")
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .replace(/\s{3,}/g, " \n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+async function extractTextFromImage(file: File) {
+  const bytes = Buffer.from(await file.arrayBuffer());
+
+  const result = await Tesseract.recognize(bytes, "eng+ind", {
+    logger: () => undefined,
+  });
+
+  const extracted = normalizeExtractedText(result.data.text || "");
+  return extracted;
+}
 
 export async function POST(req: Request) {
   try {
@@ -15,50 +38,40 @@ export async function POST(req: Request) {
     }
 
     if (fallbackText && fallbackText.trim().length >= 15) {
-      const result = analyzeJobText(fallbackText);
+      const result = analyzeJobText(fallbackText.trim());
       return NextResponse.json({
         ...result,
         input_type: "photo",
-        raw_input: `Unggahan Screenshot: ${file.name}`
+        raw_input: `Unggahan Screenshot: ${file.name}`,
+        extracted_text: fallbackText.trim(),
       });
     }
 
-    const backendUrl = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api").replace(/\/$/, "");
+    const extractedText = await extractTextFromImage(file);
 
-    try {
-      const backendFormData = new FormData();
-      backendFormData.append("file", file, file.name);
-      if (fallbackText && fallbackText.trim()) {
-        backendFormData.append("fallback_text", fallbackText.trim());
-      }
-
-      const backendRes = await fetch(`${backendUrl}/analyze/photo`, {
-        method: "POST",
-        body: backendFormData,
-      });
-
-      const backendData = await backendRes.json().catch(() => null);
-
-      if (backendRes.ok && backendData) {
-        return NextResponse.json(backendData);
-      }
-
-      if (backendData?.detail) {
-        return NextResponse.json({ detail: backendData.detail }, { status: backendRes.status || 400 });
-      }
-    } catch {
-      // backend not running yet; fallback to friendly manual-text prompt
+    if (!extractedText || extractedText.length < 15) {
+      return NextResponse.json(
+        {
+          detail: "Teks dari foto tidak terbaca dengan jelas. Silakan pilih foto yang lebih jelas atau unggah teks lowongan melalui tab Teks.",
+        },
+        { status: 400 }
+      );
     }
 
+    const result = analyzeJobText(extractedText);
+
+    return NextResponse.json({
+      ...result,
+      input_type: "photo",
+      raw_input: `Unggahan Screenshot: ${file.name}`,
+      extracted_text: extractedText,
+    });
+  } catch (error: any) {
+    console.error("Photo OCR analysis failed:", error);
     return NextResponse.json(
       {
-        detail: "Fitur pemindaian OCR dari foto sedang menunggu backend OCR aktif. Silakan tempel teks lowongan ke tab Teks agar analisis dapat dilanjutkan."
+        detail: error?.message || "Gagal memproses gambar dan membaca teks dari foto.",
       },
-      { status: 400 }
-    );
-  } catch {
-    return NextResponse.json(
-      { detail: "Gagal memproses gambar." },
       { status: 500 }
     );
   }
