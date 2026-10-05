@@ -35,6 +35,7 @@ class RiskAnalyzer:
 
         detected_indicators = []
         total_calculated_score = 0.0
+        hard_flag_detected = False
         high_severity_count = 0
         attention_count = 0
         detected_names = []
@@ -60,21 +61,32 @@ class RiskAnalyzer:
                         matched_spans.append((idx, idx + len(kw)))
                         matches.append(kw)
 
+            hard_flag_evidence = (
+                bool(re.search(r"(?:tugas|misi|like|subscribe|follow|rating)[^.!?\n]{0,120}(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)|(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)[^.!?\n]{0,120}(?:tugas|misi|like|subscribe|follow|rating)", lower_text))
+                if ind["code"] == "R6" else
+                bool(re.search(r"(?:tanpa\s*(?:izin\s*)?(?:bp2mi|p3mi)|tidak\s*(?:terdaftar|berizin|terverifikasi).{0,35}(?:bp2mi|p3mi)|visa\s*(?:turis|kunjungan)|tppo|perdagangan\s*orang)", lower_text))
+                if ind["code"] == "R9" else True
+            )
+            if ind["code"] in ("R6", "R9") and not hard_flag_evidence:
+                matches = []
+                matched_spans = []
+
             # Determine indicator status and contribution
             weight = ind.get("weight", 10)
             
-            if len(matches) >= 2 or (len(matches) >= 1 and weight >= 15):
+            if len(matches) > 0 and ind.get("hard_flag", False) and hard_flag_evidence:
                 status = "RISIKO_TINGGI"  # ! Risiko tinggi
                 status_label = "! Risiko tinggi"
                 status_badge = "high"
-                score_contrib = weight * 1.0
+                score_contrib = 0.0
+                hard_flag_detected = True
                 high_severity_count += 1
                 detected_names.append(ind["name"])
-            elif len(matches) == 1:
+            elif len(matches) > 0:
                 status = "PERLU_PERHATIAN"  # ⚠ Perlu diperhatikan
                 status_label = "⚠ Perlu diperhatikan"
                 status_badge = "attention"
-                score_contrib = weight * 0.75
+                score_contrib = float(weight)
                 attention_count += 1
                 detected_names.append(ind["name"])
             else:
@@ -105,15 +117,15 @@ class RiskAnalyzer:
             })
 
         # Cap score at 100 and round
-        final_score = min(100, int(round(total_calculated_score)))
+        final_score = 100 if hard_flag_detected else min(100, int(round(total_calculated_score)))
 
         # Determine Risk Category
-        if final_score >= 70:
+        if hard_flag_detected or final_score >= 40:
             risk_level = "RISIKO TINGGI"
             risk_color = "red"
             risk_theme = "#dc2626"
             level_code = "HIGH"
-        elif final_score >= 30:
+        elif final_score >= 5:
             risk_level = "RISIKO SEDANG"
             risk_color = "amber"
             risk_theme = "#f59e0b"
@@ -124,29 +136,21 @@ class RiskAnalyzer:
             risk_theme = "#16a34a"
             level_code = "LOW"
 
-        # Generate Ringkasan (Executive Summary)
+        # Explain detected signals and practical prevention steps without reporting counts.
         total_detected = high_severity_count + attention_count
-        if total_detected == 0:
-            summary = (
-                "Tidak ditemukan indikator risiko mencurigakan dari teks lowongan yang Anda periksa. "
-                "Secara umum format dan kriteria terlihat wajar. Namun, tetap lakukan verifikasi mandiri sebelum memberikan data pribadi."
-            )
-        elif risk_level == "RISIKO TINGGI":
-            prominent = ", ".join(detected_names[:3])
-            summary = (
-                f"Lowongan ini memiliki indikator kuat yang perlu diwaspadai, terutama terkait {prominent}. "
-                "Pola ini sering dijumpai pada modus penipuan berkedok rekrutmen. Sangat disarankan untuk tidak mentransfer uang atau mengirim dokumen berharga."
-            )
-        elif risk_level == "RISIKO SEDANG":
-            prominent = ", ".join(detected_names[:2])
-            summary = (
-                f"Lowongan ini memiliki beberapa indikator yang perlu diperhatikan, terutama {prominent}. "
-                "Terdapat ketidakjelasan atau kejanggalan dalam deskripsi, lakukan konfirmasi ke sumber resmi sebelum melamar."
-            )
-        else:
-            summary = (
-                "Sebagian besar indikator risiko tidak terdeteksi. Risiko relatif rendah, namun pastikan tetap memeriksa keabsahan kontak dan reputasi perusahaan."
-            )
+        findings = (
+            "Analisis tidak menemukan tanda risiko utama pada informasi yang diberikan."
+            if not detected_names else
+            f"Tanda yang perlu diperhatikan berkaitan dengan {', '.join(detected_names)}."
+        )
+        preventive_advice = (
+            "Tunda proses lamaran. Jangan transfer uang atau mengirim data sensitif; verifikasi perusahaan melalui kanal resmi yang ditemukan secara mandiri."
+            if risk_level == "RISIKO TINGGI" else
+            "Minta penjelasan tertulis dan verifikasi identitas perekrut serta rincian pekerjaan melalui kanal resmi sebelum melanjutkan."
+            if risk_level == "RISIKO SEDANG" else
+            "Tetap periksa identitas perusahaan dan kontak perekrut melalui sumber resmi sebelum membagikan dokumen pribadi."
+        )
+        summary = f"{findings} {preventive_advice}"
 
         return {
             "risk_score": final_score,
@@ -155,6 +159,8 @@ class RiskAnalyzer:
             "risk_theme": risk_theme,
             "level_code": level_code,
             "summary": summary,
+            "findings_summary": findings,
+            "preventive_advice": preventive_advice,
             "indicators_detected_count": total_detected,
             "indicators_attention_count": attention_count,
             "indicators_high_count": high_severity_count,

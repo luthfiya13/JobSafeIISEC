@@ -8,8 +8,7 @@ import {
   AlertOctagon,
   CheckCircle2,
   Quote,
-  Lightbulb,
-  CheckCircle
+  Lightbulb
 } from "lucide-react";
 import { IndicatorItem } from "@/lib/api";
 import { INDICATOR_ICONS } from "./IndicatorCard";

@@ -14,9 +14,9 @@ export async function POST(req: Request) {
 
     const result = analyzeJobText(text);
     return NextResponse.json(result);
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json(
-      { detail: err.message || "Gagal menganalisis teks lowongan." },
+      { detail: err instanceof Error ? err.message : "Gagal menganalisis teks lowongan." },
       { status: 500 }
     );
   }

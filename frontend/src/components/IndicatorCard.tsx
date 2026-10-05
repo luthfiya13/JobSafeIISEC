@@ -44,7 +44,6 @@ export default function IndicatorCard({ indicator, onSelect }: IndicatorCardProp
   // Status visual variants
   const isHigh = indicator.status === "RISIKO_TINGGI";
   const isAttention = indicator.status === "PERLU_PERHATIAN";
-  const isSafe = indicator.status === "TIDAK_TERDETEKSI";
 
   let statusBadge = (
     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
@@ -54,7 +53,7 @@ export default function IndicatorCard({ indicator, onSelect }: IndicatorCardProp
   );
 
   let borderClass = "border-slate-200 hover:border-slate-300";
-  let bgClass = "bg-white";
+  const bgClass = "bg-white";
 
   if (isHigh) {
     statusBadge = (

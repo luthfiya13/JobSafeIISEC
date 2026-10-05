@@ -3,58 +3,57 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Sliders,
   AlertTriangle,
   CheckCircle2,
   Save,
-  RotateCcw,
   Edit2,
-  X,
-  ShieldAlert
+  X
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
-import { getAdminIndicators, updateAdminIndicator } from "@/lib/api";
+import { AdminIndicator, getAdminIndicators, updateAdminIndicator } from "@/lib/api";
 
 export default function AdminIndicatorsPage() {
   const router = useRouter();
-  const [indicators, setIndicators] = useState<any[]>([]);
+  const [indicators, setIndicators] = useState<AdminIndicator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [editingItem, setEditingItem] = useState<AdminIndicator | null>(null);
   const [editWeight, setEditWeight] = useState<number>(0);
   const [editActive, setEditActive] = useState<boolean>(true);
   const [editDesc, setEditDesc] = useState<string>("");
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 
-  const fetchIndicators = async () => {
-    setIsLoading(true);
-    const token = typeof window !== "undefined" ? localStorage.getItem("jobsafe_admin_token") : null;
+  useEffect(() => {
+    const token = localStorage.getItem("jobsafe_admin_token");
     if (!token) {
       router.push("/admin/login");
       return;
     }
 
-    try {
-      const data = await getAdminIndicators(token);
-      setIndicators(data.indicators || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    let isCurrentRequest = true;
+    getAdminIndicators(token)
+      .then((data) => {
+        if (isCurrentRequest) setIndicators(data.indicators);
+      })
+      .catch((error: unknown) => {
+        if (isCurrentRequest) console.error(error);
+      })
+      .finally(() => {
+        if (isCurrentRequest) setIsLoading(false);
+      });
 
-  useEffect(() => {
-    fetchIndicators();
-  }, []);
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [router]);
 
   // Compute live total weight of currently active indicators
   const totalWeight = indicators.reduce((acc, curr) => {
     return acc + (curr.is_active ? Number(curr.weight) : 0);
   }, 0);
 
-  const isWeightValid = totalWeight === 100;
+  const isWeightValid = totalWeight === 105;
 
-  const handleStartEdit = (ind: any) => {
+  const handleStartEdit = (ind: AdminIndicator) => {
     setEditingItem(ind);
     setEditWeight(ind.weight);
     setEditActive(ind.is_active);
@@ -87,8 +86,8 @@ export default function AdminIndicatorsPage() {
       setEditingItem(null);
 
       setTimeout(() => setSaveSuccessMsg(null), 3500);
-    } catch (err: any) {
-      alert(err.message || "Gagal menyimpan perubahan indikator.");
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Gagal menyimpan perubahan indikator.");
     }
   };
 
@@ -127,15 +126,13 @@ export default function AdminIndicatorsPage() {
           </div>
         </div>
 
-        {/* Warning banner if total weight != 100% */}
+        {/* Warn when active weights differ from the paper's 105% distribution. */}
         {!isWeightValid && (
           <div className="mt-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">Peringatan: Total bobot saat ini tidak sama dengan 100% ({totalWeight}%).</p>
-              <p className="mt-0.5 text-red-700">
-                Sistem analisis risiko memerlukan total bobot tepat 100% untuk menghasilkan skor terstandardisasi 0–100. Harap sesuaikan bobot indikator aktif.
-              </p>
+              <p className="font-bold">Peringatan: Total bobot saat ini tidak sama dengan 105% sesuai naskah ({totalWeight}%).</p>
+              <p className="mt-0.5 text-red-700">Distribusi bobot pada naskah berjumlah 105%. Bobot Hard Flag memicu bypass ke skor 100%, sedangkan bobot Soft Flag dijumlahkan untuk klasifikasi risiko.</p>
             </div>
           </div>
         )}
@@ -182,6 +179,9 @@ export default function AdminIndicatorsPage() {
                       </td>
                       <td className="py-3.5 px-4 font-bold text-slate-800">
                         {ind.name}
+                        <span className={`block mt-1 text-[10px] font-semibold ${ind.hard_flag ? "text-red-700" : "text-blue-700"}`}>
+                          {ind.hard_flag ? "Hard Flag · Bypass S" : "Soft Flag · Terbobot"}
+                        </span>
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-semibold">

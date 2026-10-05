@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Check, Loader2, Circle, ShieldCheck } from "lucide-react";
+import { Check, Loader2, Circle } from "lucide-react";
 
 interface LoadingAnalysisProps {
   onComplete?: () => void;
@@ -18,6 +18,7 @@ const STEPS = [
 
 export default function LoadingAnalysis({ onComplete, inputType = "text" }: LoadingAnalysisProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isTakingLong, setIsTakingLong] = useState(false);
 
   useEffect(() => {
     // Progressive cadence
@@ -26,6 +27,7 @@ export default function LoadingAnalysis({ onComplete, inputType = "text" }: Load
       setTimeout(() => setCurrentStepIndex(2), 850),
       setTimeout(() => setCurrentStepIndex(3), 1350),
       setTimeout(() => setCurrentStepIndex(4), 1800),
+      setTimeout(() => setIsTakingLong(true), 10000),
       setTimeout(() => {
         if (onComplete) onComplete();
       }, 2300),
@@ -61,7 +63,6 @@ export default function LoadingAnalysis({ onComplete, inputType = "text" }: Load
           {STEPS.map((step, idx) => {
             const isDone = idx < currentStepIndex;
             const isCurrent = idx === currentStepIndex;
-            const isPending = idx > currentStepIndex;
 
             return (
               <div
@@ -94,6 +95,12 @@ export default function LoadingAnalysis({ onComplete, inputType = "text" }: Load
             );
           })}
         </div>
+
+        {isTakingLong && inputType === "photo" && (
+          <p className="mt-4 text-xs text-slate-500" aria-live="polite">
+            OCR foto masih diproses. Gambar beresolusi besar bisa memerlukan waktu lebih lama.
+          </p>
+        )}
 
         <div className="mt-8 pt-4 border-t border-slate-100">
           <span className="text-[11px] text-slate-400">

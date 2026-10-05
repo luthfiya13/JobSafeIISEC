@@ -44,6 +44,7 @@ export default function PeriksaPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [selectedIndicator, setSelectedIndicator] = useState<IndicatorItem | null>(null);
+  const [reportMessage, setReportMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,6 +55,11 @@ export default function PeriksaPage() {
       const file = e.target.files[0];
       if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
         setErrorMsg("Harap pilih berkas gambar berformat PNG, JPG, atau JPEG.");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setErrorMsg("Ukuran foto maksimal 10 MB. Kompres gambar atau pilih screenshot yang lebih kecil.");
+        e.target.value = "";
         return;
       }
       setSelectedFile(file);
@@ -153,6 +159,8 @@ export default function PeriksaPage() {
   const handleReset = () => {
     setResult(null);
     setErrorMsg(null);
+    setReportMessage(null);
+    setSelectedIndicator(null);
     setTextContent("");
     setUrlContent("");
     setSelectedFile(null);
@@ -163,6 +171,36 @@ export default function PeriksaPage() {
   // Print/Export
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleReport = async () => {
+    if (!result) return;
+    const detectedNames = result.indicators
+      .filter((indicator) => indicator.status !== "TIDAK_TERDETEKSI")
+      .map((indicator) => indicator.name);
+    const reportText = [
+      "Laporan lowongan kerja dari JOBSAFE",
+      `Tingkat risiko: ${result.risk_level}`,
+      `Skor: ${result.risk_score}/100`,
+      `Temuan: ${detectedNames.length ? detectedNames.join(", ") : "Tidak ada tanda risiko utama yang terdeteksi"}`,
+      result.raw_input ? `Sumber/teks lowongan: ${result.raw_input.slice(0, 600)}` : "",
+    ].filter(Boolean).join("\n");
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Laporan lowongan kerja JOBSAFE", text: reportText });
+        setReportMessage("Laporan dibagikan melalui aplikasi pilihan Anda.");
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(reportText);
+        setReportMessage("Isi laporan disalin. Tempelkan ke kanal pelaporan resmi pilihan Anda.");
+      } else {
+        window.location.href = `mailto:?subject=${encodeURIComponent("Laporan lowongan kerja JOBSAFE")}&body=${encodeURIComponent(reportText)}`;
+        setReportMessage("Draf laporan dibuka di aplikasi email Anda.");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      setReportMessage("Laporan belum dapat dibagikan. Silakan coba lagi atau salin informasi hasil analisis.");
+    }
   };
 
   return (
@@ -512,28 +550,22 @@ export default function PeriksaPage() {
                     </span>
                   </div>
 
-                  <p className="text-sm text-slate-700 leading-relaxed mb-5">
-                    {result.summary}
-                  </p>
-
-                  {/* Summary Metric Badges */}
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                      <span className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider block">
-                        Total Indikator
-                      </span>
-                      <span className="text-xl font-extrabold text-slate-900 mt-0.5 block">
-                        {result.indicators_detected_count} terdeteksi
-                      </span>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                        Ulasan Indikasi
+                      </h4>
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        {result.findings_summary || result.summary}
+                      </p>
                     </div>
-
-                    <div className="p-3 rounded-xl bg-amber-50/50 border border-amber-200">
-                      <span className="text-[11px] text-amber-700 font-semibold uppercase tracking-wider block">
-                        Prioritas Konfirmasi
-                      </span>
-                      <span className="text-xl font-extrabold text-amber-800 mt-0.5 block">
-                        {result.indicators_attention_count + result.indicators_high_count} perlu diverifikasi
-                      </span>
+                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-100">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-blue-800 mb-1.5">
+                        Saran Tindakan Preventif
+                      </h4>
+                      <p className="text-sm text-blue-950 leading-relaxed">
+                        {result.preventive_advice || "Verifikasi identitas perusahaan dan perekrut melalui kanal resmi sebelum mengirim dokumen atau melanjutkan proses lamaran."}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -582,22 +614,37 @@ export default function PeriksaPage() {
             <VerificationChecklist steps={result.verification_steps} />
 
             {/* BOTTOM ACTION BUTTONS */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-200">
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="space-y-3 pt-6 border-t border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-blue-600 transition-colors shadow-xs"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-blue-600 transition-colors shadow-xs"
                 >
-                  Analisis Lowongan Lain
+                  <span aria-hidden="true">🔍</span>
+                  <span>Periksa Lowongan Lainnya (Reset)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReport}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-red-200 bg-red-50 text-red-800 font-semibold text-sm hover:bg-red-100 transition-colors"
+                >
+                  <span aria-hidden="true">🚨</span>
+                  <span>Laporkan Loker Ini</span>
                 </button>
                 <Link
                   href="/"
-                  className="flex-1 sm:flex-none px-6 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors text-center"
+                  className="inline-flex items-center justify-center px-5 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors text-center"
                 >
-                  Kembali ke Beranda
+                  Selesai / Keluar
                 </Link>
               </div>
+
+              {reportMessage && (
+                <p role="status" className="text-sm text-slate-600" aria-live="polite">
+                  {reportMessage}
+                </p>
+              )}
 
               <button
                 type="button"

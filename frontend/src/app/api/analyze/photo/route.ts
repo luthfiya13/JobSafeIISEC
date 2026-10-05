@@ -1,77 +1,32 @@
 import { NextResponse } from "next/server";
-import Tesseract from "tesseract.js";
 import { analyzeJobText } from "@/lib/analyzer";
-
-export const runtime = "nodejs";
-
-function normalizeExtractedText(text: string) {
-  return text
-    .replace(/\r/g, "")
-    .replace(/[\u0000-\u001F\u007F]/g, " ")
-    .replace(/\s{3,}/g, " \n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-async function extractTextFromImage(file: File) {
-  const bytes = Buffer.from(await file.arrayBuffer());
-
-  const result = await Tesseract.recognize(bytes, "eng+ind", {
-    logger: () => undefined,
-  });
-
-  const extracted = normalizeExtractedText(result.data.text || "");
-  return extracted;
-}
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    const fallbackText = formData.get("fallback_text") as string | null;
+    const body = await req.json();
+    const text = typeof body.text === "string" ? body.text.trim() : "";
+    const fileName = typeof body.file_name === "string" ? body.file_name.slice(0, 160) : "foto";
 
-    if (!file) {
+    if (text.length < 15) {
       return NextResponse.json(
-        { detail: "Berkas foto belum dipilih." },
+        { detail: "Teks dari foto belum cukup untuk dianalisis. Coba foto yang lebih jelas atau salin teks lowongan ke tab Teks." },
         { status: 400 }
       );
     }
 
-    if (fallbackText && fallbackText.trim().length >= 15) {
-      const result = analyzeJobText(fallbackText.trim());
-      return NextResponse.json({
-        ...result,
-        input_type: "photo",
-        raw_input: `Unggahan Screenshot: ${file.name}`,
-        extracted_text: fallbackText.trim(),
-      });
-    }
-
-    const extractedText = await extractTextFromImage(file);
-
-    if (!extractedText || extractedText.length < 15) {
-      return NextResponse.json(
-        {
-          detail: "Teks dari foto tidak terbaca dengan jelas. Silakan pilih foto yang lebih jelas atau unggah teks lowongan melalui tab Teks.",
-        },
-        { status: 400 }
-      );
-    }
-
+    // Bound request processing and keep OCR itself on the user's device, outside Vercel function limits.
+    const extractedText = text.slice(0, 20_000);
     const result = analyzeJobText(extractedText);
-
     return NextResponse.json({
       ...result,
       input_type: "photo",
-      raw_input: `Unggahan Screenshot: ${file.name}`,
+      raw_input: `Unggahan Screenshot: ${fileName}`,
       extracted_text: extractedText,
     });
-  } catch (error: any) {
-    console.error("Photo OCR analysis failed:", error);
+  } catch (error: unknown) {
+    console.error("Photo analysis failed:", error);
     return NextResponse.json(
-      {
-        detail: error?.message || "Gagal memproses gambar dan membaca teks dari foto.",
-      },
+      { detail: error instanceof Error ? error.message : "Gagal menganalisis teks dari foto." },
       { status: 500 }
     );
   }

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck, Lock, Mail, ArrowRight, AlertCircle, ArrowLeft } from "lucide-react";
+import { Lock, Mail, ArrowRight, AlertCircle, ArrowLeft } from "lucide-react";
 import { adminLogin } from "@/lib/api";
 
 export default function AdminLoginPage() {
@@ -25,8 +25,8 @@ export default function AdminLoginPage() {
         localStorage.setItem("jobsafe_admin_user", JSON.stringify(data.admin));
       }
       router.push("/admin/dashboard");
-    } catch (err: any) {
-      setErrorMsg(err.message || "Gagal masuk. Periksa kembali email dan kata sandi.");
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Gagal masuk. Periksa kembali email dan kata sandi.");
     } finally {
       setIsLoading(false);
     }

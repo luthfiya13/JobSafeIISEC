@@ -61,9 +61,9 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json(
-      { detail: err.message || "Gagal memproses tautan." },
+      { detail: err instanceof Error ? err.message : "Gagal memproses tautan." },
       { status: 500 }
     );
   }

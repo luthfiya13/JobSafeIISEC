@@ -105,17 +105,39 @@ def init_db():
                 json.dumps(ind.get("patterns", []))
             ))
 
+    # Migrate the previous built-in weights once, while preserving admin-edited values.
+    legacy_default_weights = {
+        "R1": 15, "R2": 10, "R3": 15, "R4": 10, "R5": 10,
+        "R6": 15, "R7": 10, "R8": 5, "R9": 5, "R10": 5,
+    }
+    for ind in DEFAULT_INDICATORS:
+        legacy_weight = legacy_default_weights.get(ind["code"])
+        if legacy_weight is not None and ind["weight"] != legacy_weight:
+            cursor.execute(
+                "UPDATE indicators_config SET weight = ? WHERE code = ? AND weight = ?",
+                (ind["weight"], ind["code"], legacy_weight)
+            )
+
     # Seed default system settings
     default_settings = {
         "site_name": "JOBSAFE",
-        "threshold_low_max": "29",
-        "threshold_med_max": "69",
-        "threshold_high_min": "70",
+        "threshold_low_max": "4",
+        "threshold_med_max": "39",
+        "threshold_high_min": "40",
         "analysis_engine_version": "v2.6-standard",
         "maintenance_mode": "false"
     }
     for k, v in default_settings.items():
         cursor.execute("INSERT OR IGNORE INTO system_settings (key, value) VALUES (?, ?)", (k, v))
+    for key, old_value, new_value in (
+        ("threshold_low_max", "29", "4"),
+        ("threshold_med_max", "69", "39"),
+        ("threshold_high_min", "70", "40"),
+    ):
+        cursor.execute(
+            "UPDATE system_settings SET value = ? WHERE key = ? AND value = ?",
+            (new_value, key, old_value)
+        )
 
     # Pre-populate sample realistic analyses if history is empty (for rich prototype admin dashboard experience)
     cursor.execute("SELECT COUNT(*) as cnt FROM analysis_history")
@@ -183,12 +205,14 @@ def get_all_indicators() -> List[Dict[str, Any]]:
     conn.close()
 
     result = []
+    hard_flag_by_code = {ind["code"]: ind.get("hard_flag", False) for ind in DEFAULT_INDICATORS}
     for r in rows:
         result.append({
             "code": r["code"],
             "name": r["name"],
             "category": r["category"],
             "weight": r["weight"],
+            "hard_flag": hard_flag_by_code.get(r["code"], False),
             "is_active": bool(r["is_active"]),
             "description": r["description"],
             "why_important": r["why_important"],

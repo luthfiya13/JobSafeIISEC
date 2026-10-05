@@ -8,4 +8,5 @@ beautifulsoup4>=4.12.3
 requests>=2.31.0
 sqlite3-to-mysql>=2.1.0; sys_platform == 'never'
 Pillow>=10.2.0
+opencv-python-headless>=4.9.0
 rapidocr-onnxruntime>=1.4.4

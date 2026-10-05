@@ -4,52 +4,48 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
-  Filter,
   Eye,
-  X,
-  FileText,
-  AlertOctagon,
-  AlertTriangle,
-  ShieldCheck,
-  Calendar,
-  Layers
+  X
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
-import { getAdminAnalyses } from "@/lib/api";
+import { AdminAnalysisRecord, getAdminAnalyses } from "@/lib/api";
 
 export default function AdminAnalysesPage() {
   const router = useRouter();
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<AdminAnalysisRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [submittedSearchQuery, setSubmittedSearchQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("ALL");
-  const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<AdminAnalysisRecord | null>(null);
 
-  const fetchAnalyses = async () => {
-    setIsLoading(true);
-    const token = typeof window !== "undefined" ? localStorage.getItem("jobsafe_admin_token") : null;
+  useEffect(() => {
+    const token = localStorage.getItem("jobsafe_admin_token");
     if (!token) {
       router.push("/admin/login");
       return;
     }
 
-    try {
-      const data = await getAdminAnalyses(token, searchQuery, levelFilter);
-      setItems(data.items || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    let isCurrentRequest = true;
+    getAdminAnalyses(token, submittedSearchQuery, levelFilter)
+      .then((data) => {
+        if (isCurrentRequest) setItems(data.items);
+      })
+      .catch((error: unknown) => {
+        if (isCurrentRequest) console.error(error);
+      })
+      .finally(() => {
+        if (isCurrentRequest) setIsLoading(false);
+      });
 
-  useEffect(() => {
-    fetchAnalyses();
-  }, [levelFilter]);
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [levelFilter, router, submittedSearchQuery]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchAnalyses();
+    setSubmittedSearchQuery(searchQuery.trim());
   };
 
   return (
@@ -249,7 +245,7 @@ export default function AdminAnalysesPage() {
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedRecord.indicators && selectedRecord.indicators.length > 0 ? (
-                      selectedRecord.indicators.map((ind: any, i: number) => (
+                      selectedRecord.indicators.map((ind, i) => (
                         <span
                           key={i}
                           className="px-2.5 py-1 rounded-md bg-red-50 text-red-700 border border-red-200 font-semibold text-[11px]"

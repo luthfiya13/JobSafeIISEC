@@ -6,6 +6,7 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
         "code": "R1",
         "name": "Biaya di Awal",
         "weight": 15,
+        "hard_flag": True,
         "is_active": True,
         "category": "Keuangan",
         "description": "Permintaan biaya pendaftaran, deposit, pelatihan, materi kerja, atau pembayaran apa pun sebelum resmi bekerja.",
@@ -28,6 +29,7 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
         "code": "R2",
         "name": "Imbalan Tidak Wajar",
         "weight": 10,
+        "hard_flag": False,
         "is_active": True,
         "category": "Kompensasi",
         "description": "Penawaran penghasilan, komisi, atau gaji harian yang sangat tinggi dan tidak rasional dibandingkan beban kerja atau kualifikasi yang diminta.",
@@ -47,7 +49,8 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
     {
         "code": "R3",
         "name": "Permintaan Dokumen Sensitif",
-        "weight": 15,
+        "weight": 8,
+        "hard_flag": False,
         "is_active": True,
         "category": "Privasi & Legalitas",
         "description": "Permintaan foto KTP, foto selfie dengan KTP, nomor rekening, KK, atau informasi sensitif sebelum ada proses wawancara/seleksi yang sah.",
@@ -58,6 +61,7 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
             "data login", "password rekening", "selfie pegang ktp"
         ],
         "patterns": [
+            r"(?:kirim|unggah|upload|lampirkan|serahkan|wajib\s*mengirim)\s*(?:foto\s*)?(?:ktp|e-ktp|kk|kartu\s*keluarga|nomor\s*rekening)",
             r"(?:kirim|unggah|upload|lampirkan|sertakan)\s*(?:foto\s*ktp|selfie\s*(?:dengan|memegang|pegang)?\s*ktp|foto\s*buku\s*tabungan)",
             r"(?:foto|scan)\s*(?:ktp|e-ktp|kartu\s*keluarga|kk|buku\s*rekening)\s*(?:asli|depan\s*belakang)",
             r"(?:nomor|no)\s*(?:rekening|cvv|otp|pin)\s*(?:untuk\s*verifikasi|pendaftaran|gaji)",
@@ -68,26 +72,24 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
         "code": "R4",
         "name": "Identitas Perusahaan Tidak Jelas",
         "weight": 10,
+        "hard_flag": True,
         "is_active": True,
         "category": "Profil Perusahaan",
-        "description": "Identitas perusahaan, alamat kantor fisik, atau kontak resmi tidak jelas, anonim, atau menggunakan email/domain gratisan (gmail/yahoo) tanpa domain perusahaan resmi.",
+        "description": "Email perekrut menggunakan domain publik/gratis atau identitas email anonim, bukan alamat domain resmi perusahaan.",
         "why_important": "Perusahaan bonafide memiliki legalitas, alamat kantor fisik yang dapat diverifikasi di peta/Kemenkumham, serta saluran email korporat resmi dengan domain perusahaan.",
         "keywords": [
-            "pt bergerak di bidang", "perusahaan multinasional terkemuka", "@gmail.com", "@yahoo.com",
-            "nama pt menyusul", "pt dirahasiakan", "kantor virtual", "tanpa website", "alamat di shareloc",
-            "alamat menyusul", "pt anonim"
+            "@gmail.com", "@yahoo.com", "@hotmail.com", "@outlook.com", "@ymail.com"
         ],
         "patterns": [
             r"(?:email|kirim\s*cv\s*ke)\s*:\s*[a-zA-Z0-9._%+-]+@(?:gmail|yahoo|hotmail|outlook|ymail)\.com",
-            r"(?:nama\s*perusahaan|pt)\s*(?:dirahasiakan|anonim|menyusul|akan\s*diinfokan)",
-            r"(?:perusahaan|kantor)\s*(?:bergerak\s*di\s*bidang\s*apa\s*saja|tidak\s*disebutkan\s*namanya)",
-            r"(?:alamat|lokasi)\s*(?:akan\s*diberikan\s*via\s*wa|shareloc\s*nanti|diinfokan\s*kemudian)"
+            r"(?:email|alamat\s*email)\s*(?:anonim|pribadi|tidak\s*resmi|tidak\s*terverifikasi)"
         ]
     },
     {
         "code": "R5",
         "name": "Deskripsi Pekerjaan Tidak Jelas",
-        "weight": 10,
+        "weight": 7,
+        "hard_flag": False,
         "is_active": True,
         "category": "Uraian Pekerjaan",
         "description": "Deskripsi pekerjaan ambigu, serba bisa, tidak terstruktur, tidak menjelaskan KPI, alur kerja, atau tanggung jawab secara spesifik.",
@@ -106,6 +108,7 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
         "code": "R6",
         "name": "Skema Tugas Berantai",
         "weight": 15,
+        "hard_flag": True,
         "is_active": True,
         "category": "Modus Operasional",
         "description": "Modus pekerjaan berbasis misi berantai seperti like postingan media sosial, subscribe channel, rating e-commerce, atau top-up saldo bertingkat.",
@@ -116,7 +119,6 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
             "misi ke-1", "misi level", "selesaikan tugas", "screeshot bukti like"
         ],
         "patterns": [
-            r"(?:like|subscribe|follow|rating|ulasan)\s*(?:tiktok|youtube|instagram|shopee|tokopedia|lazada|video|channel)",
             r"(?:tugas|misi)\s*(?:bertingkat|level\s*\d+|top\s*up|deposit\s*saldo|pesanan\s*fiktif)",
             r"(?:screenshot|ss)\s*bukti\s*(?:like|follow|subscribe|tugas)\s*(?:lalu\s*cair|dapat\s*komisi)",
             r"(?:selesaikan|jalankan)\s*(?:tugas|misi)\s*(?:untuk\s*menaikkan\s*komisi|ambil\s*bonus)"
@@ -126,6 +128,7 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
         "code": "R7",
         "name": "Perjalanan/Akomodasi Wajib",
         "weight": 10,
+        "hard_flag": True,
         "is_active": True,
         "category": "Logistik & Travel",
         "description": "Panggilan tes seleksi di kota lain dengan kewajiban memesan tiket pesawat, hotel, atau akomodasi melalui biro travel / pihak tertentu yang ditunjuk.",
@@ -144,7 +147,8 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
     {
         "code": "R8",
         "name": "Kanal Komunikasi Tidak Resmi",
-        "weight": 5,
+        "weight": 10,
+        "hard_flag": False,
         "is_active": True,
         "category": "Saluran Kontak",
         "description": "Seluruh proses seleksi dan komunikasi hanya dilakukan melalui akun pribadi WhatsApp atau Telegram tanpa identitas organisasi yang terverifikasi.",
@@ -154,6 +158,7 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
             "admin wa", "hanya lewat wa", "wa.me/", "t.me/", "kontak telegram"
         ],
         "patterns": [
+            r"(?:whatsapp|wa|telegram)\s*(?:pribadi|personal)|(?:hanya|cuma)\s*(?:melalui|lewat|via)\s*(?:whatsapp|wa|telegram)",
             r"(?:wa\.me\/\d+|t\.me\/[a-zA-Z0-9_]+)",
             r"(?:hubungi|chat|kontak)\s*(?:admin|hrd|recruiter)\s*(?:hanya\s*melalui|via|ke)\s*(?:whatsapp|wa|telegram)",
             r"(?:gabung|masuk)\s*(?:grup|channel)\s*telegram\s*(?:untuk\s*penjelasan|tugas|kerja)"
@@ -162,7 +167,8 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
     {
         "code": "R9",
         "name": "Tawaran Kerja Luar Negeri Berisiko",
-        "weight": 5,
+        "weight": 15,
+        "hard_flag": True,
         "is_active": True,
         "category": "Ketenagakerjaan Migran",
         "description": "Tawaran pekerjaan di luar negeri (seperti Kamboja, Myanmar, Filipina, dll.) tanpa kejelasan izin resmi P3MI, visa kerja resmi, atau verifikasi BP2MI.",
@@ -181,6 +187,7 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
         "code": "R10",
         "name": "Urgensi Palsu",
         "weight": 5,
+        "hard_flag": False,
         "is_active": True,
         "category": "Teknik Persuasi",
         "description": "Penggunaan frasa tekanan batas waktu ekstrim ('kuota terbatas', 'harus daftar/transfer dalam 1 jam', 'kesempatan terakhir') untuk memicu kepanikan (FOMO).",

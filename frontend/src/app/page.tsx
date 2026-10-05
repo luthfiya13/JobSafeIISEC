@@ -10,17 +10,6 @@ import {
   Cpu,
   Gauge,
   CheckSquare,
-  Sparkles,
-  CreditCard,
-  DollarSign,
-  Building2,
-  HelpCircle,
-  Layers,
-  Plane,
-  MessageCircle,
-  Globe,
-  Clock,
-  ExternalLink,
   ChevronRight
 } from "lucide-react";
 import Navbar from "@/components/Navbar";

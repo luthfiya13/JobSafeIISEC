@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 
 let settings = {
   site_name: "JOBSAFE",
-  threshold_low_max: "29",
-  threshold_med_max: "69",
-  threshold_high_min: "70",
+  threshold_low_max: "4",
+  threshold_med_max: "39",
+  threshold_high_min: "40",
   analysis_engine_version: "v2.6-standard",
   maintenance_mode: "false"
 };

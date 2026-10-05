@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server";
-import { DEFAULT_INDICATORS } from "@/lib/analyzer";
-
-let dynamicIndicators = [...DEFAULT_INDICATORS];
+import { adminIndicators } from "@/lib/admin-store";
 
 export async function GET() {
-  const total_weight = dynamicIndicators.reduce(
+  const total_weight = adminIndicators.reduce(
     (acc, curr) => acc + (curr.is_active ? curr.weight : 0),
     0
   );
 
   return NextResponse.json({
-    indicators: dynamicIndicators,
+    indicators: adminIndicators,
     total_weight,
-    is_valid_total: total_weight === 100
+    is_valid_total: total_weight === 105
   });
 }

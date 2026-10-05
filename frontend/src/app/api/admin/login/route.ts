@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       { detail: "Email atau kata sandi admin tidak sesuai." },
       { status: 401 }
     );
-  } catch (err: any) {
+  } catch {
     return NextResponse.json(
       { detail: "Terjadi kesalahan pada server autentikasi." },
       { status: 500 }

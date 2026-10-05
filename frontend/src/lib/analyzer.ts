@@ -2,6 +2,7 @@ export interface IndicatorConfig {
   code: string;
   name: string;
   weight: number;
+  hard_flag: boolean;
   is_active: boolean;
   category: string;
   description: string;
@@ -15,6 +16,7 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     code: "R1",
     name: "Biaya di Awal",
     weight: 15,
+    hard_flag: true,
     is_active: true,
     category: "Keuangan",
     description: "Permintaan biaya pendaftaran, deposit, pelatihan, materi kerja, atau pembayaran apa pun sebelum resmi bekerja.",
@@ -37,6 +39,7 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     code: "R2",
     name: "Imbalan Tidak Wajar",
     weight: 10,
+    hard_flag: false,
     is_active: true,
     category: "Kompensasi",
     description: "Penawaran penghasilan, komisi, atau gaji harian yang sangat tinggi dan tidak rasional dibandingkan beban kerja atau kualifikasi yang diminta.",
@@ -56,7 +59,8 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
   {
     code: "R3",
     name: "Permintaan Dokumen Sensitif",
-    weight: 15,
+    weight: 8,
+    hard_flag: false,
     is_active: true,
     category: "Privasi & Legalitas",
     description: "Permintaan foto KTP, foto selfie dengan KTP, nomor rekening, KK, atau informasi sensitif sebelum ada proses wawancara/seleksi yang sah.",
@@ -67,6 +71,7 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
       "data login", "password rekening", "selfie pegang ktp"
     ],
     patterns: [
+      /(?:kirim|unggah|upload|lampirkan|serahkan|wajib\s*mengirim)\s*(?:foto\s*)?(?:ktp|e-ktp|kk|kartu\s*keluarga|nomor\s*rekening)/i,
       /(?:kirim|unggah|upload|lampirkan|sertakan)\s*(?:foto\s*ktp|selfie\s*(?:dengan|memegang|pegang)?\s*ktp|foto\s*buku\s*tabungan)/i,
       /(?:foto|scan)\s*(?:ktp|e-ktp|kartu\s*keluarga|kk|buku\s*rekening)\s*(?:asli|depan\s*belakang)/i,
       /(?:nomor|no)\s*(?:rekening|cvv|otp|pin)\s*(?:untuk\s*verifikasi|pendaftaran|gaji)/i,
@@ -77,26 +82,24 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     code: "R4",
     name: "Identitas Perusahaan Tidak Jelas",
     weight: 10,
+    hard_flag: true,
     is_active: true,
     category: "Profil Perusahaan",
-    description: "Identitas perusahaan, alamat kantor fisik, atau kontak resmi tidak jelas, anonim, atau menggunakan email/domain gratisan (gmail/yahoo) tanpa domain perusahaan resmi.",
+    description: "Email perekrut menggunakan domain publik/gratis atau identitas email anonim, bukan alamat domain resmi perusahaan.",
     why_important: "Perusahaan bonafide memiliki legalitas, alamat kantor fisik yang dapat diverifikasi di peta/Kemenkumham, serta saluran email korporat resmi dengan domain perusahaan.",
     keywords: [
-      "pt bergerak di bidang", "perusahaan multinasional terkemuka", "@gmail.com", "@yahoo.com",
-      "nama pt menyusul", "pt dirahasiakan", "kantor virtual", "tanpa website", "alamat di shareloc",
-      "alamat menyusul", "pt anonim"
+      "@gmail.com", "@yahoo.com", "@hotmail.com", "@outlook.com", "@ymail.com"
     ],
     patterns: [
       /(?:email|kirim\s*cv\s*ke)\s*:\s*[a-zA-Z0-9._%+-]+@(?:gmail|yahoo|hotmail|outlook|ymail)\.com/i,
-      /(?:nama\s*perusahaan|pt)\s*(?:dirahasiakan|anonim|menyusul|akan\s*diinfokan)/i,
-      /(?:perusahaan|kantor)\s*(?:bergerak\s*di\s*bidang\s*apa\s*saja|tidak\s*disebutkan\s*namanya)/i,
-      /(?:alamat|lokasi)\s*(?:akan\s*diberikan\s*via\s*wa|shareloc\s*nanti|diinfokan\s*kemudian)/i
+      /(?:email|alamat\s*email)\s*(?:anonim|pribadi|tidak\s*resmi|tidak\s*terverifikasi)/i
     ]
   },
   {
     code: "R5",
     name: "Deskripsi Pekerjaan Tidak Jelas",
-    weight: 10,
+    weight: 7,
+    hard_flag: false,
     is_active: true,
     category: "Uraian Pekerjaan",
     description: "Deskripsi pekerjaan ambigu, serba bisa, tidak terstruktur, tidak menjelaskan KPI, alur kerja, atau tanggung jawab secara spesifik.",
@@ -115,6 +118,7 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     code: "R6",
     name: "Skema Tugas Berantai",
     weight: 15,
+    hard_flag: true,
     is_active: true,
     category: "Modus Operasional",
     description: "Modus pekerjaan berbasis misi berantai seperti like postingan media sosial, subscribe channel, rating e-commerce, atau top-up saldo bertingkat.",
@@ -125,7 +129,6 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
       "misi ke-1", "misi level", "selesaikan tugas", "screeshot bukti like"
     ],
     patterns: [
-      /(?:like|subscribe|follow|rating|ulasan)\s*(?:tiktok|youtube|instagram|shopee|tokopedia|lazada|video|channel)/i,
       /(?:tugas|misi)\s*(?:bertingkat|level\s*\d+|top\s*up|deposit\s*saldo|pesanan\s*fiktif)/i,
       /(?:screenshot|ss)\s*bukti\s*(?:like|follow|subscribe|tugas)\s*(?:lalu\s*cair|dapat\s*komisi)/i,
       /(?:selesaikan|jalankan)\s*(?:tugas|misi)\s*(?:untuk\s*menaikkan\s*komisi|ambil\s*bonus)/i
@@ -135,6 +138,7 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     code: "R7",
     name: "Perjalanan/Akomodasi Wajib",
     weight: 10,
+    hard_flag: true,
     is_active: true,
     category: "Logistik & Travel",
     description: "Panggilan tes seleksi di kota lain dengan kewajiban memesan tiket pesawat, hotel, atau akomodasi melalui biro travel / pihak tertentu yang ditunjuk.",
@@ -153,7 +157,8 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
   {
     code: "R8",
     name: "Kanal Komunikasi Tidak Resmi",
-    weight: 5,
+    weight: 10,
+    hard_flag: false,
     is_active: true,
     category: "Saluran Kontak",
     description: "Seluruh proses seleksi dan komunikasi hanya dilakukan melalui akun pribadi WhatsApp atau Telegram tanpa identitas organisasi yang terverifikasi.",
@@ -163,6 +168,7 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
       "admin wa", "hanya lewat wa", "wa.me/", "t.me/", "kontak telegram"
     ],
     patterns: [
+      /(?:whatsapp|wa|telegram)\s*(?:pribadi|personal)|(?:hanya|cuma)\s*(?:melalui|lewat|via)\s*(?:whatsapp|wa|telegram)/i,
       /(?:wa\.me\/\d+|t\.me\/[a-zA-Z0-9_]+)/i,
       /(?:hubungi|chat|kontak)\s*(?:admin|hrd|recruiter)\s*(?:hanya\s*melalui|via|ke)\s*(?:whatsapp|wa|telegram)/i,
       /(?:gabung|masuk)\s*(?:grup|channel)\s*telegram\s*(?:untuk\s*penjelasan|tugas|kerja)/i
@@ -171,7 +177,8 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
   {
     code: "R9",
     name: "Tawaran Kerja Luar Negeri Berisiko",
-    weight: 5,
+    weight: 15,
+    hard_flag: true,
     is_active: true,
     category: "Ketenagakerjaan Migran",
     description: "Tawaran pekerjaan di luar negeri (seperti Kamboja, Myanmar, Filipina, dll.) tanpa kejelasan izin resmi P3MI, visa kerja resmi, atau verifikasi BP2MI.",
@@ -190,6 +197,7 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     code: "R10",
     name: "Urgensi Palsu",
     weight: 5,
+    hard_flag: false,
     is_active: true,
     category: "Teknik Persuasi",
     description: "Penggunaan frasa tekanan batas waktu ekstrim ('kuota terbatas', 'harus daftar/transfer dalam 1 jam', 'kesempatan terakhir') untuk memicu kepanikan (FOMO).",
@@ -257,6 +265,7 @@ export function analyzeJobText(text: string) {
 
   const lower = cleaned.toLowerCase();
   let totalScore = 0;
+  let hardFlagDetected = false;
   let highCount = 0;
   let attentionCount = 0;
   const detectedNames: string[] = [];
@@ -301,18 +310,28 @@ export function analyzeJobText(text: string) {
     let status_badge: "safe" | "attention" | "high" = "safe";
     let scoreContrib = 0;
 
-    if (matches.length >= 2 || (matches.length >= 1 && weight >= 15)) {
+    const hardFlagEvidence = ind.code === "R6"
+      ? /(?:tugas|misi|like|subscribe|follow|rating)[^.!?\n]{0,120}(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)|(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)[^.!?\n]{0,120}(?:tugas|misi|like|subscribe|follow|rating)/i.test(cleaned)
+      : ind.code === "R9"
+        ? /(?:tanpa\s*(?:izin\s*)?(?:bp2mi|p3mi)|tidak\s*(?:terdaftar|berizin|terverifikasi).{0,35}(?:bp2mi|p3mi)|visa\s*(?:turis|kunjungan)|tppo|perdagangan\s*orang)/i.test(cleaned)
+        : true;
+    if ((ind.code === "R6" || ind.code === "R9") && !hardFlagEvidence) {
+      matches.length = 0;
+      evidence = null;
+    }
+    if (matches.length > 0 && ind.hard_flag && hardFlagEvidence) {
       status = "RISIKO_TINGGI";
       status_label = "! Risiko tinggi";
       status_badge = "high";
-      scoreContrib = weight * 1.0;
+      scoreContrib = 0;
+      hardFlagDetected = true;
       highCount++;
       detectedNames.push(ind.name);
-    } else if (matches.length === 1) {
+    } else if (matches.length > 0) {
       status = "PERLU_PERHATIAN";
       status_label = "⚠ Perlu diperhatikan";
       status_badge = "attention";
-      scoreContrib = weight * 0.75;
+      scoreContrib = weight;
       attentionCount++;
       detectedNames.push(ind.name);
     }
@@ -334,37 +353,37 @@ export function analyzeJobText(text: string) {
     };
   });
 
-  const finalScore = Math.min(100, Math.round(totalScore));
+  const finalScore = hardFlagDetected ? 100 : Math.min(100, Math.round(totalScore));
   let riskLevel: "RISIKO RENDAH" | "RISIKO SEDANG" | "RISIKO TINGGI" = "RISIKO RENDAH";
   let riskColor: "green" | "amber" | "red" = "green";
   let riskTheme = "#16a34a";
   let levelCode: "LOW" | "MEDIUM" | "HIGH" = "LOW";
 
-  if (finalScore >= 70) {
+  if (hardFlagDetected || finalScore >= 40) {
     riskLevel = "RISIKO TINGGI";
     riskColor = "red";
     riskTheme = "#dc2626";
     levelCode = "HIGH";
-  } else if (finalScore >= 30) {
+  } else if (finalScore >= 5) {
     riskLevel = "RISIKO SEDANG";
     riskColor = "amber";
     riskTheme = "#f59e0b";
     levelCode = "MEDIUM";
   }
 
+  const detectedTopics = detectedIndicators
+    .filter((indicator) => indicator.status !== "TIDAK_TERDETEKSI")
+    .map((indicator) => indicator.name);
+  const findings = detectedTopics.length === 0
+    ? "Analisis tidak menemukan tanda risiko utama pada informasi yang diberikan."
+    : `Tanda yang perlu diperhatikan berkaitan dengan ${detectedTopics.join(", ")}.`;
+  const preventiveAdvice = riskLevel === "RISIKO TINGGI"
+    ? "Tunda proses lamaran. Jangan transfer uang atau mengirim data sensitif; verifikasi perusahaan melalui kanal resmi yang ditemukan secara mandiri."
+    : riskLevel === "RISIKO SEDANG"
+      ? "Minta penjelasan tertulis dan verifikasi identitas perekrut serta rincian pekerjaan melalui kanal resmi sebelum melanjutkan."
+      : "Tetap periksa identitas perusahaan dan kontak perekrut melalui sumber resmi sebelum membagikan dokumen pribadi.";
+  const summary = `${findings} ${preventiveAdvice}`;
   const totalDetected = highCount + attentionCount;
-  let summary = "";
-  if (totalDetected === 0) {
-    summary = "Tidak ditemukan indikator risiko mencurigakan dari teks lowongan yang Anda periksa. Format dan kriteria terlihat wajar. Namun, tetap lakukan verifikasi mandiri sebelum memberikan data pribadi.";
-  } else if (riskLevel === "RISIKO TINGGI") {
-    const prominent = detectedNames.slice(0, 3).join(", ");
-    summary = `Lowongan ini memiliki indikator kuat yang perlu diwaspadai, terutama terkait ${prominent}. Pola ini sering dijumpai pada modus penipuan berkedok rekrutmen. Sangat disarankan untuk tidak mentransfer uang atau mengirim dokumen berharga.`;
-  } else if (riskLevel === "RISIKO SEDANG") {
-    const prominent = detectedNames.slice(0, 2).join(", ");
-    summary = `Lowongan ini memiliki beberapa indikator yang perlu diperhatikan, terutama ${prominent}. Terdapat ketidakjelasan atau kejanggalan dalam deskripsi, lakukan konfirmasi ke sumber resmi sebelum melamar.`;
-  } else {
-    summary = "Sebagian besar indikator risiko tidak terdeteksi. Risiko relatif rendah, namun pastikan tetap memeriksa keabsahan kontak dan reputasi perusahaan.";
-  }
 
   return {
     id: Date.now(),
@@ -374,6 +393,8 @@ export function analyzeJobText(text: string) {
     risk_theme: riskTheme,
     level_code: levelCode,
     summary,
+    findings_summary: findings,
+    preventive_advice: preventiveAdvice,
     indicators_detected_count: totalDetected,
     indicators_attention_count: attentionCount,
     indicators_high_count: highCount,

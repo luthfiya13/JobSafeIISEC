@@ -3,13 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Settings,
   Save,
   AlertTriangle,
-  CheckCircle2,
-  Sliders,
-  ShieldCheck,
-  Server
+  CheckCircle2
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
 import { getAdminSettings, updateAdminSettings } from "@/lib/api";
@@ -17,9 +13,9 @@ import { getAdminSettings, updateAdminSettings } from "@/lib/api";
 export default function AdminSettingsPage() {
   const router = useRouter();
   const [siteName, setSiteName] = useState("JOBSAFE");
-  const [thresholdLow, setThresholdLow] = useState(29);
-  const [thresholdMed, setThresholdMed] = useState(69);
-  const [thresholdHigh, setThresholdHigh] = useState(70);
+  const [thresholdLow, setThresholdLow] = useState(4);
+  const [thresholdMed, setThresholdMed] = useState(39);
+  const [thresholdHigh, setThresholdHigh] = useState(40);
   const [engineVersion, setEngineVersion] = useState("v2.6-standard");
   const [maintenance, setMaintenance] = useState(false);
 
@@ -69,8 +65,8 @@ export default function AdminSettingsPage() {
 
       setSaveSuccessMsg("Pengaturan sistem JOBSAFE berhasil diperbarui.");
       setTimeout(() => setSaveSuccessMsg(null), 4000);
-    } catch (err: any) {
-      alert(err.message || "Gagal menyimpan pengaturan.");
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Gagal menyimpan pengaturan.");
     }
   };
 
@@ -78,7 +74,7 @@ export default function AdminSettingsPage() {
     <div className="min-h-screen flex bg-slate-50 text-slate-900">
       <AdminSidebar />
 
-      <main className="flex-1 p-6 sm:p-10 max-w-4xl mx-auto overflow-y-auto">
+      <main aria-busy={isLoading} className="flex-1 p-6 sm:p-10 max-w-4xl mx-auto overflow-y-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-slate-200">
           <div>

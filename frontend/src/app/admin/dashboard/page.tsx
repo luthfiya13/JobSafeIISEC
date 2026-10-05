@@ -4,23 +4,20 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ShieldAlert,
   ShieldCheck,
   AlertTriangle,
   AlertOctagon,
   BarChart3,
   PieChart,
   ArrowRight,
-  TrendingUp,
-  Clock,
-  Sparkles
+  TrendingUp
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
-import { getAdminDashboard } from "@/lib/api";
+import { AdminDashboardStats, getAdminDashboard } from "@/lib/api";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -35,10 +32,11 @@ export default function AdminDashboardPage() {
       try {
         const data = await getAdminDashboard(token);
         setStats(data);
-      } catch (err: any) {
-        setErrorMsg(err.message || "Gagal memuat statistik admin.");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Gagal memuat statistik admin.";
+        setErrorMsg(message);
         // If unauthorized, redirect to login
-        if (err.message && err.message.includes("tidak valid")) {
+        if (message.includes("tidak valid")) {
           router.push("/admin/login");
         }
       } finally {
@@ -247,7 +245,7 @@ export default function AdminDashboardPage() {
 
                   <div className="space-y-3">
                     {stats?.top_indicators && stats.top_indicators.length > 0 ? (
-                      stats.top_indicators.map((item: any, idx: number) => {
+                      stats.top_indicators.map((item) => {
                         const maxCount = stats.top_indicators[0]?.count || 1;
                         const pct = Math.round((item.count / maxCount) * 100);
 
@@ -322,7 +320,7 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-600">
-                    {stats?.recent_analyses?.map((row: any) => (
+                    {stats?.recent_analyses?.map((row) => (
                       <tr key={row.id} className="hover:bg-slate-50/50">
                         <td className="py-3 text-slate-400 whitespace-nowrap">
                           {row.created_at ? new Date(row.created_at).toLocaleDateString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "-"}

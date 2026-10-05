@@ -29,7 +29,7 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
       bgBadge: "bg-emerald-50 border-emerald-200 text-emerald-800",
       glow: "rgba(22, 163, 74, 0.15)",
       icon: ShieldCheck,
-      rangeText: "Skor 0–29: Pola risiko rendah / normal"
+      rangeText: "🟢 Skor 0–4: Risiko rendah"
     },
     amber: {
       stroke: "#f59e0b",
@@ -38,7 +38,7 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
       bgBadge: "bg-amber-50 border-amber-200 text-amber-800",
       glow: "rgba(245, 158, 11, 0.15)",
       icon: AlertTriangle,
-      rangeText: "Skor 30–69: Perlu perhatian & verifikasi ketat"
+      rangeText: "🟡 Skor 5–39 tanpa Hard Flag: Risiko sedang"
     },
     red: {
       stroke: "#dc2626",
@@ -47,12 +47,17 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
       bgBadge: "bg-red-50 border-red-200 text-red-800",
       glow: "rgba(220, 38, 38, 0.18)",
       icon: AlertOctagon,
-      rangeText: "Skor 70–100: Pola risiko tinggi / sangat mencurigakan"
+      rangeText: "🔴 Hard Flag atau skor ≥ 40: Risiko tinggi"
     }
   };
 
   const currentTheme = colorMap[color] || colorMap.amber;
   const IconComponent = currentTheme.icon;
+  const riskSymbol = level === "RISIKO TINGGI"
+    ? "🔴"
+    : level === "RISIKO SEDANG"
+      ? "🟡"
+      : "🟢";
 
   // Arc calculation for semi/gauge circle (240 degrees arc)
   const radius = 95;
@@ -116,8 +121,8 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
 
           {/* Dial ticks */}
           <text x="35" y="185" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">0</text>
-          <text x="85" y="45" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">30</text>
-          <text x="155" y="45" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">70</text>
+          <text x="85" y="45" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">5</text>
+          <text x="155" y="45" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">40</text>
           <text x="205" y="185" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">100</text>
         </svg>
 
@@ -138,7 +143,8 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
           <div className="mt-2">
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border tracking-wide uppercase ${currentTheme.bgBadge}`}>
               <IconComponent className="w-3.5 h-3.5" />
-              {level}
+              <span aria-hidden="true">{riskSymbol}</span>
+              <span>{level}</span>
             </span>
           </div>
         </div>
