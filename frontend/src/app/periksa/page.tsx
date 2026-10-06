@@ -27,7 +27,8 @@ import {
   IndicatorItem,
   analyzeText,
   analyzeUrl,
-  analyzePhoto
+  analyzePhoto,
+  readTextFromImage
 } from "@/lib/api";
 import { PRESET_JOBS } from "@/lib/mockData";
 
@@ -38,6 +39,7 @@ export default function PeriksaPage() {
   const [urlContent, setUrlContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [ocrTextDraft, setOcrTextDraft] = useState<string | null>(null);
 
   // Flow states
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +47,8 @@ export default function PeriksaPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [selectedIndicator, setSelectedIndicator] = useState<IndicatorItem | null>(null);
   const [reportMessage, setReportMessage] = useState<string | null>(null);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [complaintText, setComplaintText] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,6 +67,7 @@ export default function PeriksaPage() {
         return;
       }
       setSelectedFile(file);
+      setOcrTextDraft(null);
       const reader = new FileReader();
       reader.onload = (event) => {
         setFilePreview(event.target?.result as string);
@@ -74,6 +79,7 @@ export default function PeriksaPage() {
   const handleRemoveFile = () => {
     setSelectedFile(null);
     setFilePreview(null);
+    setOcrTextDraft(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -142,7 +148,19 @@ export default function PeriksaPage() {
 
       setIsLoading(true);
       try {
-        const res = await analyzePhoto(selectedFile);
+        if (ocrTextDraft === null) {
+          const extractedText = await readTextFromImage(selectedFile);
+          if (extractedText.length < 15) {
+            throw new Error("Teks foto belum terbaca cukup jelas. Coba foto yang lebih tajam atau ketik teksnya sendiri.");
+          }
+          setOcrTextDraft(extractedText);
+          return;
+        }
+
+        if (ocrTextDraft.trim().length < 15) {
+          throw new Error("Teks hasil OCR terlalu pendek. Perbaiki teks atau baca ulang foto sebelum analisis.");
+        }
+        const res = await analyzePhoto(selectedFile, ocrTextDraft);
         setResult(res);
       } catch (err: unknown) {
         const message = err instanceof Error
@@ -160,11 +178,14 @@ export default function PeriksaPage() {
     setResult(null);
     setErrorMsg(null);
     setReportMessage(null);
+    setShowReportForm(false);
+    setComplaintText("");
     setSelectedIndicator(null);
     setTextContent("");
     setUrlContent("");
-    setSelectedFile(null);
-    setFilePreview(null);
+      setSelectedFile(null);
+      setFilePreview(null);
+      setOcrTextDraft(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -173,34 +194,16 @@ export default function PeriksaPage() {
     window.print();
   };
 
-  const handleReport = async () => {
+  const handleReport = () => {
     if (!result) return;
-    const detectedNames = result.indicators
-      .filter((indicator) => indicator.status !== "TIDAK_TERDETEKSI")
-      .map((indicator) => indicator.name);
-    const reportText = [
-      "Laporan lowongan kerja dari JOBSAFE",
-      `Tingkat risiko: ${result.risk_level}`,
-      `Skor: ${result.risk_score}/100`,
-      `Temuan: ${detectedNames.length ? detectedNames.join(", ") : "Tidak ada tanda risiko utama yang terdeteksi"}`,
-      result.raw_input ? `Sumber/teks lowongan: ${result.raw_input.slice(0, 600)}` : "",
-    ].filter(Boolean).join("\n");
+    setReportMessage(null);
+    setShowReportForm(true);
+  };
 
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Laporan lowongan kerja JOBSAFE", text: reportText });
-        setReportMessage("Laporan dibagikan melalui aplikasi pilihan Anda.");
-      } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(reportText);
-        setReportMessage("Isi laporan disalin. Tempelkan ke kanal pelaporan resmi pilihan Anda.");
-      } else {
-        window.location.href = `mailto:?subject=${encodeURIComponent("Laporan lowongan kerja JOBSAFE")}&body=${encodeURIComponent(reportText)}`;
-        setReportMessage("Draf laporan dibuka di aplikasi email Anda.");
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") return;
-      setReportMessage("Laporan belum dapat dibagikan. Silakan coba lagi atau salin informasi hasil analisis.");
-    }
+  const handleReportSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!complaintText.trim()) return;
+    setReportMessage("Tampilan demo saja: aduan belum dikirim atau disimpan.");
   };
 
   return (
@@ -394,13 +397,39 @@ export default function PeriksaPage() {
                           </button>
                         </div>
 
+                        {ocrTextDraft !== null && (
+                          <div className="space-y-2">
+                            <label htmlFor="ocr-text-review" className="block text-xs font-semibold text-slate-600">
+                              Tinjau dan koreksi teks yang dibaca dari foto sebelum analisis:
+                            </label>
+                            <textarea
+                              id="ocr-text-review"
+                              value={ocrTextDraft}
+                              onChange={(event) => setOcrTextDraft(event.target.value)}
+                              rows={10}
+                              className="w-full p-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                              spellCheck
+                            />
+                            <div className="flex items-center justify-between text-xs text-slate-400">
+                              <span>{ocrTextDraft.length} karakter</span>
+                              <button
+                                type="button"
+                                onClick={() => setOcrTextDraft(null)}
+                                className="font-semibold text-blue-700 hover:text-blue-900"
+                              >
+                                Baca Ulang Foto
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
                             onClick={handleRunAnalysis}
                             className="px-8 py-3.5 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-blue-600 transition-all shadow-xs active:scale-98"
                           >
-                            Analisis Foto
+                            {ocrTextDraft === null ? "Baca & Tinjau Teks Foto" : "Analisis Teks Ini"}
                           </button>
                           <button
                             type="button"
@@ -416,7 +445,7 @@ export default function PeriksaPage() {
                     <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-500 flex items-start gap-2">
                       <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                       <span>
-                        Sistem akan membaca teks dari foto secara otomatis. Setelah analisis selesai, Anda dapat mengecek teks yang berhasil diekstrak di laporan hasil.
+                        Sistem menyiapkan beberapa versi gambar untuk OCR. Tinjau teks hasil baca dan koreksi jika perlu sebelum menjalankan analisis.
                       </span>
                     </div>
                   </div>
@@ -640,8 +669,83 @@ export default function PeriksaPage() {
                 </Link>
               </div>
 
+              {showReportForm && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 p-4" role="presentation">
+                <form
+                  onSubmit={handleReportSubmit}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="report-form-title"
+                  className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-red-200 bg-white p-5 sm:p-6 shadow-2xl space-y-5"
+                >
+                  <div>
+                    <h2 id="report-form-title" className="text-lg font-bold text-slate-900">Form Aduan Lowongan</h2>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Periksa teks lowongan berikut dan jelaskan alasan Anda melaporkannya.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="report-listing-text" className="block text-sm font-semibold text-slate-700">
+                      Teks Lowongan
+                    </label>
+                    <textarea
+                      id="report-listing-text"
+                      value={result.extracted_text || result.raw_input || "Teks lowongan tidak tersedia."}
+                      readOnly
+                      rows={8}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="report-complaint" className="block text-sm font-semibold text-slate-700">
+                      Aduan Anda
+                    </label>
+                    <textarea
+                      id="report-complaint"
+                      value={complaintText}
+                      onChange={(event) => setComplaintText(event.target.value)}
+                      placeholder="Jelaskan bagian yang mencurigakan atau alasan Anda melaporkan lowongan ini..."
+                      required
+                      minLength={10}
+                      maxLength={2000}
+                      rows={5}
+                      className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                    <p className="text-xs text-slate-400 text-right">{complaintText.length}/2000</p>
+                  </div>
+
+                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowReportForm(false);
+                        setReportMessage(null);
+                      }}
+                      className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                    >
+                      Tutup Form
+                    </button>
+                    <button
+                      type="submit"
+                      className="rounded-xl bg-red-700 px-5 py-3 text-sm font-semibold text-white hover:bg-red-800"
+                    >
+                      Kirim Aduan
+                    </button>
+                  </div>
+
+                  {reportMessage && (
+                    <p role="status" className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900" aria-live="polite">
+                      {reportMessage}
+                    </p>
+                  )}
+                </form>
+                </div>
+              )}
+
               {reportMessage && (
-                <p role="status" className="text-sm text-slate-600" aria-live="polite">
+                !showReportForm && <p role="status" className="text-sm text-slate-600" aria-live="polite">
                   {reportMessage}
                 </p>
               )}
