@@ -12,7 +12,6 @@ import {
   AlertCircle,
   RotateCcw,
   Printer,
-  Sparkles,
   Info
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -30,7 +29,6 @@ import {
   analyzePhoto,
   readTextFromImage
 } from "@/lib/api";
-import { PRESET_JOBS } from "@/lib/mockData";
 
 export default function PeriksaPage() {
   // Input states
@@ -83,13 +81,6 @@ export default function PeriksaPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  };
-
-  // Preset job loader
-  const handleLoadPreset = (preset: typeof PRESET_JOBS[0]) => {
-    setActiveTab("text");
-    setTextContent(preset.text);
-    setErrorMsg(null);
   };
 
   // Run Analysis Handler
@@ -229,33 +220,6 @@ export default function PeriksaPage() {
               <p className="text-slate-600 text-sm sm:text-base">
                 Masukkan informasi lowongan yang ingin Anda periksa. Pilih metode input teks, foto screenshot, atau tautan.
               </p>
-            </div>
-
-            {/* Presets Quick Selectors */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
-              <div className="flex items-center gap-2 mb-2.5">
-                <Sparkles className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Uji Coba Cepat dengan Contoh Nyata:
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                {PRESET_JOBS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleLoadPreset(preset)}
-                    className="text-left p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 hover:bg-blue-50/60 hover:border-blue-300 transition-all text-xs flex flex-col justify-between"
-                  >
-                    <span className="font-semibold text-slate-900 line-clamp-1">
-                      {preset.title.split("(")[0]}
-                    </span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border mt-1.5 w-fit ${preset.badgeColor}`}>
-                      {preset.badge}
-                    </span>
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Main Input Card with 3 Tabs */}
