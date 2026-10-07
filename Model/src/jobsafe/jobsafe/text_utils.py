@@ -10,12 +10,41 @@ EMAIL_RE = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")
 URL_RE = re.compile(rf"(?i)(?<![@\w.-])(?:https?://)?(?:www\.)?(?:[a-z0-9-]+\.)+{TLDS}(?![a-z0-9])(?:/[^\s<>()]*)?")
 SHORTENERS = ("bit.ly","tinyurl.com","s.id","cutt.ly","shorturl.at","rb.gy","t.ly","is.gd","lnkd.in","forms.gle","linktr.ee","wa.me","t.me")
 
+def fix_ocr_leetspeak(text: str) -> str:
+    """Normalizes common OCR character substitutions in Indonesian text (e.g., tr4nsfer -> transfer)."""
+    def _fix_word(match):
+        w = match.group(0)
+        if re.match(r"^(?:s[1-3]|d[1-4]|r\d{1,2}|jl|no)$", w, re.I):
+            return w
+        has_letters = bool(re.search(r"[a-zA-Z]", w))
+        has_digits = bool(re.search(r"[0-9]", w))
+        if has_letters and has_digits and len(w) >= 3:
+            w_sub = w
+            w_sub = re.sub(r"(?<=[a-zA-Z])0(?=[a-zA-Z])|(?<=[a-zA-Z]{2})0|0(?=[a-zA-Z]{2})", "o", w_sub)
+            w_sub = re.sub(r"(?<=[a-zA-Z])4(?=[a-zA-Z])|(?<=[a-zA-Z]{2})4|4(?=[a-zA-Z]{2})", "a", w_sub)
+            w_sub = re.sub(r"(?<=[a-zA-Z])3(?=[a-zA-Z])|(?<=[a-zA-Z]{2})3|3(?=[a-zA-Z]{2})", "e", w_sub)
+            w_sub = re.sub(r"(?<=[a-zA-Z])1(?=[a-zA-Z])|(?<=[a-zA-Z]{2})1|1(?=[a-zA-Z]{2})", "i", w_sub)
+            return w_sub
+        return w
+
+    words = re.split(r"(\s+|[^\w\s])", text)
+    processed = []
+    for chunk in words:
+        if "@" in chunk or "http" in chunk or "www." in chunk:
+            processed.append(chunk)
+        elif re.search(r"[a-zA-Z0-9]", chunk):
+            processed.append(re.sub(r"\b[a-zA-Z0-9]+\b", _fix_word, chunk))
+        else:
+            processed.append(chunk)
+    return "".join(processed)
+
 def clean(text: str) -> str:
     t = unicodedata.normalize("NFKC", str(text or "")).replace("\u200b", "")
     return t.replace("\r", "\n")
 
 def normalize_text(text: str) -> str:
-    return re.sub(r"[ \t\f\v]+", " ", re.sub(r"\n{2,}", "\n", clean(text))).strip()
+    t = fix_ocr_leetspeak(clean(text))
+    return re.sub(r"[ \t\f\v]+", " ", re.sub(r"\n{2,}", "\n", t)).strip()
 
 def split_sentences(text: str) -> List[str]:
     parts = re.split(r"\n|(?<=[.!?])\s+(?=[A-Z0-9])", normalize_text(text))

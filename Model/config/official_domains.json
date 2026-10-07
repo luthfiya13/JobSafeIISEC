@@ -5,7 +5,7 @@
     {"name":"Pertamina","aliases":["pertamina"],"domains":["pertamina.com"]},
     {"name":"BNI","aliases":["bni","bank negara indonesia"],"domains":["bni.co.id"]},
     {"name":"BRI","aliases":["bri","bank rakyat indonesia"],"domains":["bri.co.id"]},
-    {"name":"Bank Mandiri","aliases":["bank mandiri"],"domains":["bankmandiri.co.id"]},
+    {"name":"Bank Mandiri","aliases":["bank mandiri","mandiri sekuritas"],"domains":["bankmandiri.co.id","mandirisekuritas.co.id"]},
     {"name":"BCA","aliases":["bca","bank central asia"],"domains":["bca.co.id"]},
     {"name":"PLN","aliases":["pln"],"domains":["pln.co.id"]},
     {"name":"Telkom","aliases":["telkom","telkomsel"],"domains":["telkom.co.id","telkomsel.com"]},

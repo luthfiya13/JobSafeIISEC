@@ -108,7 +108,7 @@ def detect(text: str, url: Optional[str] = None) -> Dict[str, Any]:
         r"\b(?:otp|password|kata sandi|kode verifikasi)\b.{0,40}\b(?:kirim|berikan|sebutkan|bagikan)\w*"
     ])
     ident = _first(t, [
-        r"\b(?:kirim|upload|unggah|serahkan|lampirkan|kirimkan|foto|fotokopi)\w*\b.{0,60}\b(?:ktp|e-?ktp|nik|paspor|passport|kk|selfie|foto diri|nomor rekening|no\.? rekening|rekening bank|kartu atm|kartu kredit)\b"
+        r"\b(?:kirim|upload|unggah|serahkan|lampirkan|kirimkan|foto|fotokopi|input|masukkan|isi|cantumkan|berikan|share)\w*\b.{0,60}\b(?:ktp|e-?ktp|nik|paspor|passport|kk|selfie|foto diri|nomor rekening|no\.? rekening|rekening bank|kartu atm|kartu kredit|data perbankan)\b"
     ])
     if cred:
         res["R3"].append(evidence("R3", 0.97, cred, "Permintaan OTP/password/PIN/kode verifikasi — tidak pernah sah dalam rekrutmen."))

@@ -144,6 +144,48 @@ class JobsafeEngine:
 
         d = detect(text, url)
         scores = best_scores(d)
+        
+        # Teks pendek (<50 karakter) tanpa kontak atau indikator risiko dianggap tidak memadai
+        has_contacts = bool(d["entities"]["urls"] or d["entities"]["emails"] or d["entities"]["phones"])
+        has_strong_indicators = any(s >= 0.4 for s in scores.values())
+        if len(text) < 50 and not has_contacts and not has_strong_indicators:
+            return {
+                "risk_score": None,
+                "risk_level": "INSUFFICIENT_INPUT",
+                "detected_indicators": [],
+                "evidence": [],
+                "dimension_scores": {},
+                "verification_status": {
+                    "status": "UNVERIFIED",
+                    "claimed_employer": None,
+                    "official_domain_match": False,
+                    "application_channel": "none",
+                    "details": "Teks terlalu pendek atau tidak memuat informasi lowongan yang memadai."
+                },
+                "context_flags": {"url_only": bool(url)},
+                "risk_explanation": LEVEL_MSG["INSUFFICIENT_INPUT"],
+                "recommended_actions": ["Tempel teks lowongan lengkap atau unggah poster lowongan kerja."],
+                "disclaimer": DISCLAIMER_ID,
+                "message": LEVEL_MSG["INSUFFICIENT_INPUT"],
+                "dimensions": {},
+                "indicators": [],
+                "recommendations": ["Tempel teks lowongan lengkap atau unggah poster lowongan kerja."],
+                "verification_checklist": [
+                    "Ketik sendiri alamat situs resmi perusahaan dan cari halaman karir di sana.",
+                    "Hubungi perusahaan lewat kontak resmi untuk konfirmasi lowongan.",
+                    "Pastikan tidak ada biaya apa pun dalam proses seleksi."
+                ],
+                "context": {"url_only": bool(url)},
+                "meta": {
+                    "engine_version": self.config["version"],
+                    "input_quality": "LOW",
+                    "base_score": None,
+                    "floors_applied": [],
+                    "rule_only": True,
+                    "ml_enabled": False
+                }
+            }
+
         base = self._noisy_or(scores)
         score, floors = self._floors(base, scores)
         level = "LOW" if score < self.low_max else ("MEDIUM" if score < self.high_min else "HIGH")
