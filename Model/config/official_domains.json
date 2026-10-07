@@ -1,0 +1,27 @@
+{
+  "trusted_job_platforms": ["glints.com","jobstreet.co.id","jobstreet.com","linkedin.com","kalibrr.com","kitalulus.com","indeed.com","karir.com","jobs.id"],
+  "gov_domain_suffixes": ["go.id","fhcibumn.id"],
+  "orgs": [
+    {"name":"Pertamina","aliases":["pertamina"],"domains":["pertamina.com"]},
+    {"name":"BNI","aliases":["bni","bank negara indonesia"],"domains":["bni.co.id"]},
+    {"name":"BRI","aliases":["bri","bank rakyat indonesia"],"domains":["bri.co.id"]},
+    {"name":"Bank Mandiri","aliases":["bank mandiri"],"domains":["bankmandiri.co.id"]},
+    {"name":"BCA","aliases":["bca","bank central asia"],"domains":["bca.co.id"]},
+    {"name":"PLN","aliases":["pln"],"domains":["pln.co.id"]},
+    {"name":"Telkom","aliases":["telkom","telkomsel"],"domains":["telkom.co.id","telkomsel.com"]},
+    {"name":"KAI","aliases":["kereta api","kai wisata","kawisata"],"domains":["kai.id","kawisata.id"]},
+    {"name":"Angkasa Pura","aliases":["angkasa pura"],"domains":["angkasapura.co.id"]},
+    {"name":"PAMA","aliases":["pamapersada","pama persada"],"domains":["pamapersada.com"]},
+    {"name":"Antam","aliases":["antam"],"domains":["antam.com"]},
+    {"name":"Djarum","aliases":["djarum"],"domains":["djarum.com"]},
+    {"name":"Tokopedia","aliases":["tokopedia"],"domains":["tokopedia.com"]},
+    {"name":"Randstad","aliases":["randstad"],"domains":["randstad.co.id","randstad.com"]},
+    {"name":"Roti'O","aliases":["roti'o","rotio"],"domains":["rotio.com"]},
+    {"name":"UNICEF","aliases":["unicef"],"domains":["unicef.org"]},
+    {"name":"MR DIY","aliases":["mr diy","mr.diy"],"domains":["mr-diy.co.id"]},
+    {"name":"Sociolla","aliases":["sociolla"],"domains":["sociolla.com"]},
+    {"name":"BUMN (generik)","aliases":["bumn"],"domains":["fhcibumn.id"]},
+    {"name":"Instansi pemerintah","aliases":["kementerian","bnn","polri","badan gizi nasional"],"domains":["go.id"]}
+  ],
+  "_note": "Seed list. Domain resmi HARUS diverifikasi manual sebelum produksi. Employer di luar daftar tidak pernah dinilai R4 dari domain."
+}

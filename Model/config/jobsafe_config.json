@@ -1,0 +1,245 @@
+{
+  "version": "3.0.0",
+  "task": "ordinal_recruitment_risk_assessment",
+  "outputs": [
+    "LOW",
+    "MEDIUM",
+    "HIGH",
+    "INSUFFICIENT_INPUT"
+  ],
+  "thresholds_bootstrap": {
+    "low_max": 25,
+    "high_min": 60,
+    "status": "bootstrap_only_recalibrate_before_publication"
+  },
+  "aggregation": "noisy_or(base_weight_i * confidence_i) + interaction_floors",
+  "dimensions": {
+    "financial": [
+      "R1",
+      "R2",
+      "R6"
+    ],
+    "data_identity": [
+      "R3"
+    ],
+    "legitimacy_deception": [
+      "R4",
+      "R5",
+      "R8"
+    ],
+    "exploitation_safety": [
+      "R7",
+      "R9"
+    ],
+    "manipulation": [
+      "R10"
+    ]
+  },
+  "indicators": {
+    "R1": {
+      "name": "Biaya/deposit di awal rekrutmen",
+      "base_weight": 0.85,
+      "severity": "CRITICAL",
+      "legal": "Permenaker 39/2016; UU 21/2007",
+      "syariah": "Tadlis & Gharar; Hifzh al-Mal; akad ijarah batal bila ada pungutan tidak sah"
+    },
+    "R2": {
+      "name": "Kompensasi tidak sebanding dengan beban/kualifikasi",
+      "base_weight": 0.3,
+      "severity": "MINOR",
+      "legal": "-",
+      "syariah": "Gharar (ujrah tidak wajar/tidak ma'lum); Tadlis kualitas"
+    },
+    "R3": {
+      "name": "Permintaan data identitas/kredensial sensitif",
+      "base_weight": 0.65,
+      "severity": "MAJOR",
+      "legal": "UU PDP 27/2022 (minimisasi data)",
+      "syariah": "Hifzh al-Mal; Hifzh al-'Irdh"
+    },
+    "R4": {
+      "name": "Pencatutan identitas employer / tautan tidak sesuai kanal resmi",
+      "base_weight": 0.65,
+      "severity": "MAJOR",
+      "legal": "UU ITE 1/2024; KUHP 378",
+      "syariah": "Tadlis (penyamaran identitas); Sadd adz-Dzari'ah"
+    },
+    "R5": {
+      "name": "Informasi lowongan material minim/tidak jelas",
+      "base_weight": 0.3,
+      "severity": "MINOR",
+      "legal": "-",
+      "syariah": "Gharar (objek kerja tidak ma'lum)"
+    },
+    "R6": {
+      "name": "Skema tugas/top-up/setoran modal berantai",
+      "base_weight": 0.88,
+      "severity": "CRITICAL",
+      "legal": "KUHP 378; UU ITE 28(1)",
+      "syariah": "Maisir/gharar; Hifzh al-Mal"
+    },
+    "R7": {
+      "name": "Travel/akomodasi terikat disertai biaya/utang",
+      "base_weight": 0.55,
+      "severity": "CONTEXT",
+      "legal": "Permenaker 39/2016",
+      "syariah": "Tadlis; utang terselubung"
+    },
+    "R8": {
+      "name": "Kanal/rekruter tidak dapat diverifikasi (konteks)",
+      "base_weight": 0.25,
+      "severity": "CONTEXT",
+      "legal": "-",
+      "syariah": "Asimetri informasi; kewajiban tabayyun"
+    },
+    "R9": {
+      "name": "Indikasi TPPO/migrasi non-prosedural/eksploitasi",
+      "base_weight": 0.8,
+      "severity": "CRITICAL",
+      "legal": "UU 21/2007 (TPPO); UU 18/2017 (PMI)",
+      "syariah": "Hifzh an-Nafs"
+    },
+    "R10": {
+      "name": "Tekanan waktu disertai tindakan berisiko / larangan verifikasi",
+      "base_weight": 0.4,
+      "severity": "MINOR",
+      "legal": "-",
+      "syariah": "Tadlis (manipulasi kesadaran); hilangnya an-taradhin"
+    }
+  },
+  "floor_rules": [
+    {
+      "name": "explicit_upfront_payment",
+      "if_all": [
+        [
+          "R1",
+          0.85
+        ]
+      ],
+      "min_score": 80
+    },
+    {
+      "name": "transaction_task_scheme",
+      "if_all": [
+        [
+          "R6",
+          0.85
+        ]
+      ],
+      "min_score": 80
+    },
+    {
+      "name": "credential_request",
+      "if_all": [
+        [
+          "R3",
+          0.95
+        ]
+      ],
+      "min_score": 80
+    },
+    {
+      "name": "sensitive_id_early_via_chat",
+      "if_all": [
+        [
+          "R3",
+          0.85
+        ]
+      ],
+      "min_score": 60
+    },
+    {
+      "name": "impersonation_plus_data",
+      "if_all": [
+        [
+          "R4",
+          0.8
+        ],
+        [
+          "R3",
+          0.7
+        ]
+      ],
+      "min_score": 80
+    },
+    {
+      "name": "high_risk_migration",
+      "if_all": [
+        [
+          "R9",
+          0.85
+        ]
+      ],
+      "min_score": 65
+    },
+    {
+      "name": "migration_plus_cluster",
+      "if_all": [
+        [
+          "R9",
+          0.5
+        ]
+      ],
+      "any": [
+        [
+          "R1",
+          0.5
+        ],
+        [
+          "R3",
+          0.5
+        ],
+        [
+          "R7",
+          0.5
+        ],
+        [
+          "R10",
+          0.5
+        ],
+        [
+          "R2",
+          0.5
+        ]
+      ],
+      "min_score": 80
+    },
+    {
+      "name": "pressure_plus_high_stakes_action",
+      "if_all": [
+        [
+          "R10",
+          0.65
+        ]
+      ],
+      "any": [
+        [
+          "R1",
+          0.45
+        ],
+        [
+          "R3",
+          0.45
+        ],
+        [
+          "R6",
+          0.45
+        ]
+      ],
+      "min_score": 60
+    }
+  ],
+  "context_not_risk_alone": [
+    "WA/Telegram pribadi",
+    "nomor HP pribadi",
+    "startup/UMKM",
+    "tanpa website",
+    "Gmail/Yahoo/Hotmail",
+    "gaji tinggi tanpa ketidaksesuaian",
+    "kerja luar negeri tanpa sinyal lain",
+    "akomodasi/tiket disediakan",
+    "shortlink saja",
+    "batas waktu biasa",
+    "kalimat peringatan anti-penipuan"
+  ]
+}
