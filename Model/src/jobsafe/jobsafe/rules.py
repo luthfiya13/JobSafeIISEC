@@ -88,13 +88,15 @@ def detect(text: str, url: Optional[str] = None) -> Dict[str, Any]:
 
     # R2 — kompensasi vs hambatan masuk
     high = _first(t, [
+        r"\b(?:\$|usd\s*)\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})\b",
+        r"\b(?:rp\.?\s*)?(?:1[5-9]|[2-9]\d)\s*(?:juta|jt)\b",
         r"\b(?:rp\.?\s*)?(?:1[5-9]|[2-9]\d|\d{3,})\s*(?:juta|jt)\b(?:\s*(?:/|per)\s*(?:bulan|bln))?",
         r"\b(?:rp\.?\s*)?(?:1[5-9]|[2-9]\d)\.\d{3}\.\d{3}\b",
         r"\b(?:\$|usd)\s?(?:[1-9]\d{3,})\b|\b[1-9]\d{3,}\s?(?:usd|dollar)\b",
         r"\b(?:rp\.?\s*)?\d{3,}\s*(?:rb|ribu|k)\s*(?:/|per)\s*(?:hari|jam)\b",
     ])
     low_barrier = _first(t, [
-        r"\btanpa\s+(?:pengalaman|skill|keahlian|syarat|bahasa inggris|ijazah)\b",
+        r"\btanpa\s+(?:(?:minimal|batasan)\s+)?(?:pengalaman|skill|keahlian|syarat|bahasa inggris|ijazah)\b",
         r"\btidak\s+(?:wajib|perlu)\s+(?:bisa|pengalaman|ijazah)\b",
         r"\b(?:cukup|modal)\s+(?:hp|handphone|android|like|subscribe)\b",
         r"\b(?:santai|mudah|gampang)\b.{0,40}\b(?:gaji|penghasilan|komisi|untung)\b",

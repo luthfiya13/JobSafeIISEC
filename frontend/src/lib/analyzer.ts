@@ -52,6 +52,8 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
       "penghasilan tak terbatas", "hanya 15 menit", "kerja santai gaji jutaan", "penghasilan 5-10 juta/minggu"
     ],
     patterns: [
+      /(?:gaji|penghasilan|salary)[^.!?\n]{0,35}(?:usd\s*)?\$?\s*(?:1[5-9]\d{2}|[2-9]\d{3,}|[1-9]\.\d{3})\s*(?:per\s*bulan|\/\s*bulan|monthly)[^.!?\n]{0,500}(?:tanpa\s*(?:minimal\s*)?pengalaman|tanpa\s*syarat|hanya\s*(?:perlu|modal)|cukup\s*(?:bisa|mahir)|admin\s*typing)/i,
+      /(?:\$\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})|usd\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})|rp\.?\s*(?:1[5-9]|[2-9]\d)\s*(?:juta|jt))[^.!?\n]{0,700}(?:tanpa\s*(?:minimal\s*)?pengalaman|tanpa\s*syarat|ada\s*pelatihan|admin\s*typing)/i,
       /(?:penghasilan|gaji|komisi|upah)\s*(?:rp\s*)?(?:[3-9]\d{2}\.?\d{3}|[1-9]\.?\d{6})\s*(?:per\s*hari|\/hari|harian|tiap\s*hari)/i,
       /(?:kerja|tugas)\s*(?:santai|mudah|ringan)\s*(?:gaji|penghasilan|dapat)\s*(?:jutaan|besar|melimpah)/i,
       /(?:hanya|cukup)\s*(?:modal\s*hp|punya\s*hp|rebahan|like\s*video)\s*(?:dapat|menghasilkan|hasilkan)\s*(?:rp|juta|\d+)/i,
@@ -191,6 +193,7 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     ],
     patterns: [
       /(?:tujuan|penempatan|lokasi\s+kerja)\s*:?\s*(?:di\s+|ke\s+)?(?:kamboja|cambodia|myanmar|laos|filipina)/i,
+      /(?:kamboja|cambodia|myanmar|laos)[^.!?\n]{0,180}(?:customer\s*service|\bcs\b|admin(?:istrasi)?|typing|telemarketing|operator)/i,
       /(?:kerja|lowongan)\s*(?:di|ke)\s*(?:kamboja|myanmar|laos|filipina|cambodia)\s*(?:gaji\s*dollar|tanpa\s*syarat|cs|admin)/i,
       /(?:visa\s*kunjungan|visa\s*turis)\s*(?:dulu|nanti\s*diubah|bisa\s*bekerja)/i,
       /(?:tanpa\s*izin\s*bp2mi|tanpa\s*p3mi|berangkat\s*cepat\s*tanpa\s*birokrasi)/i
@@ -211,6 +214,7 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     ],
     patterns: [
       /(?:kuota|slot)\s*(?:sangat\s*terbatas|tersisa\s*(?:hanya\s*)?\d+|tinggal\s*\d+)/i,
+      /(?:dibutuhkan\s+cepat|sisa\s*\d+\s*slot\s*terakhir|\d+\s*slot\s*terakhir|mengamankan\s+slot)/i,
       /(?:hanya\s*hari\s*ini|dalam\s*waktu\s*\d+\s*(?:menit|jam)|segera\s*sebelum\s*kehabisan)/i,
       /(?:kesempatan\s*terakhir|jangan\s*sampai\s*ketinggalan|buru\s*buru\s*daftar)/i
     ]
@@ -324,6 +328,16 @@ export function analyzeJobText(text: string) {
       }
     }
 
+    // OCR often splits salary and qualification across distant poster blocks.
+    // Treat their co-occurrence as one contextual R2 finding instead of
+    // requiring a fragile phrase to appear on the same line.
+    if (ind.code === "R2" && matches.length === 0
+      && /(?:\$\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})|usd\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})|rp\.?\s*(?:1[5-9]|[2-9]\d)\s*(?:juta|jt))/i.test(cleaned)
+      && /(?:tanpa\s*(?:minimal\s*)?pengalaman|tanpa\s*syarat|tanpa\s*kualifikasi|ada\s*pelatihan|admin\s*typing)/i.test(cleaned)) {
+      matches.push("gaji tinggi + kualifikasi/pengalaman minimal");
+      evidence = "Gaji tinggi dikombinasikan dengan syarat pengalaman/kualifikasi yang rendah.";
+    }
+
     const weight = ind.weight;
     let status: "RISIKO_TINGGI" | "PERLU_PERHATIAN" | "TIDAK_TERDETEKSI" = "TIDAK_TERDETEKSI";
     let status_label = "✓ Tidak terdeteksi";
@@ -337,14 +351,22 @@ export function analyzeJobText(text: string) {
       : ind.code === "R9"
         ? /(?:tanpa\s*(?:izin\s*)?(?:bp2mi|p3mi)|tidak\s*(?:terdaftar|berizin|terverifikasi).{0,35}(?:bp2mi|p3mi)|visa\s*(?:turis|kunjungan)|tppo|perdagangan\s*orang)/i.test(cleaned)
           || (/(?:kamboja|cambodia|myanmar|laos)/i.test(cleaned)
-            && /(?:paspor|passport|visa|pengurusan\s+dokumen|keberangkatan|tiket\s+pesawat)/i.test(cleaned)
-            && /(?:biaya\s+(?:awal\s+)?(?:pendaftaran|keberangkatan|visa|dokumen)|rp\.?\s*[\d.,]+[^.!?\n]{0,50}(?:biaya|pendaftaran|visa|dokumen))/i.test(cleaned))
+            && /(?:customer\s*service|\bcs\b|admin(?:istrasi)?|typing|telemarketing|operator)/i.test(cleaned)
+            && (/(?:jalur\s+khusus|visa\s*(?:turis|kunjungan)|tanpa\s*(?:izin|p3mi|bp2mi)|non.?prosedural|paspor\s+ditahan)/i.test(cleaned)
+              || (/(?:kirim|unggah|upload|serahkan)[^.!?\n]{0,45}(?:ktp|paspor|passport|identitas)/i.test(cleaned)
+                && /(?:sekarang\s+juga|hari\s+ini|mengamankan\s+(?:slot|posisi)|slot\s+terakhir|sisa\s*\d+\s*slot)/i.test(cleaned))
+              || /(?:\$|usd\s*)\s*(?:1[5-9]\d{2}|[2-9]\d{3,}|[1-9]\.\d{3})[^.!?\n]{0,40}(?:bulan|monthly)/i.test(cleaned)))
+      : ind.code === "R3"
+        ? /(?:otp|password|kata\s+sandi|pin\b|kode\s+verifikasi)/i.test(cleaned)
+          || (/(?:foto\s*)?(?:ktp|e-?ktp|paspor|passport|kartu\s+keluarga)/i.test(cleaned)
+            && /(?:kirim|unggah|upload|serahkan|lampirkan)/i.test(cleaned)
+            && /(?:sekarang\s+juga|hari\s+ini|mengamankan\s+(?:slot|posisi)|sebelum\s+interview)/i.test(cleaned))
         : true;
     if ((ind.code === "R6" || ind.code === "R9") && !hardFlagEvidence) {
       matches.length = 0;
       evidence = null;
     }
-    if (matches.length > 0 && ind.hard_flag && hardFlagEvidence) {
+    if (matches.length > 0 && hardFlagEvidence && (ind.hard_flag || ind.code === "R3")) {
       status = "RISIKO_TINGGI";
       status_label = "! Risiko tinggi";
       status_badge = "high";
