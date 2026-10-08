@@ -7,12 +7,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 MODEL_ROOT = Path(__file__).resolve().parents[3] / "Model"
-MODEL_SRC = MODEL_ROOT / "src"
-if str(MODEL_SRC) not in sys.path:
-    sys.path.insert(0, str(MODEL_SRC))
+if str(MODEL_ROOT) not in sys.path:
+    sys.path.insert(0, str(MODEL_ROOT))
 
 try:
-    from jobsafe.jobsafe.hybrid_engine import JobsafeHybridEngine  # noqa: E402
+    # Use the compatibility package so the persisted estimator can resolve
+    # its historical ``jobsafe.ml_model`` module path as well.
+    from jobsafe.hybrid_engine import JobsafeHybridEngine  # noqa: E402
 except (ImportError, OSError):
     JobsafeHybridEngine = None  # type: ignore[assignment,misc]
 from app.engine.analyzer import RiskAnalyzer

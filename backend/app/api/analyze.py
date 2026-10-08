@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Literal
 from app.engine.jobsafe_service import get_jobsafe_service
 from app.engine.scraper_service import scrape_job_url
 from app.engine.ocr_service import extract_text_from_image
@@ -10,6 +10,7 @@ router = APIRouter(prefix="/analyze", tags=["Risk Analysis"])
 
 class TextAnalysisRequest(BaseModel):
     text: str
+    input_type: Literal["text", "photo"] = "text"
 
 class UrlAnalysisRequest(BaseModel):
     url: str
@@ -52,7 +53,7 @@ def analyze_text_endpoint(req: TextAnalysisRequest):
         )
 
     # Load active indicators from DB
-    return _run_analysis(text, "text", text[:160])
+    return _run_analysis(text, req.input_type, text[:160])
 
 @router.post("/url")
 def analyze_url_endpoint(req: UrlAnalysisRequest):
@@ -85,16 +86,23 @@ async def analyze_photo_endpoint(
     if len(content) > 10 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Ukuran foto melebihi batas 10MB.")
 
-    extracted_text = ""
-    ocr_res = extract_text_from_image(content)
-    if ocr_res.get("success"):
-        extracted_text = ocr_res["text"]
-    elif fallback_text and len(fallback_text.strip()) >= 20:
-        extracted_text = fallback_text.strip()
+    extracted_text = (fallback_text or "").strip()
+    ocr_error = "Teks dalam foto belum dapat dibaca secara jelas. Silakan salin teks ke tab Teks."
+    if len(extracted_text) >= 20:
+        # Prefer text reviewed/extracted by the browser. OCR is only a server
+        # fallback for API clients that upload an image directly.
+        pass
     else:
+        ocr_res = extract_text_from_image(content)
+        if ocr_res.get("success"):
+            extracted_text = ocr_res["text"]
+        else:
+            extracted_text = ""
+            ocr_error = ocr_res.get("error", ocr_error)
+    if not extracted_text:
         raise HTTPException(
             status_code=400,
-            detail=ocr_res.get("error", "Teks dalam foto belum dapat dibaca secara jelas. Silakan salin teks ke tab Teks.")
+            detail=ocr_error
         )
 
     return _run_analysis(extracted_text, "photo", f"Unggahan Foto: {file.filename}", {"extracted_text": extracted_text})

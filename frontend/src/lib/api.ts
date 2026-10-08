@@ -97,24 +97,24 @@ export interface PublicIndicator {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
-export async function analyzeText(text: string): Promise<AnalysisResult> {
+export async function analyzeText(text: string, inputType: "text" | "photo" = "text"): Promise<AnalysisResult> {
   let res: Response;
   try {
     res = await fetch(`${API_BASE}/analyze/text`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, input_type: inputType }),
     });
   } catch {
     // Keep text analysis usable when the optional FastAPI service is offline.
-    return analyzeJobText(text);
+    return { ...analyzeJobText(text), input_type: inputType };
   }
 
   if (res.status === 503) {
     // The Next.js proxy returns 503 when FastAPI is not running. The browser
     // engine uses the same indicator contract and lets the user still see a
     // report instead of getting stuck after the progress animation.
-    return analyzeJobText(text);
+    return { ...analyzeJobText(text), input_type: inputType };
   }
 
   if (!res.ok) {
@@ -150,20 +150,9 @@ export async function analyzePhoto(file: File, fallbackText?: string): Promise<A
     throw new Error("Teks dari foto belum terbaca dengan jelas. Coba foto yang lebih tajam, lurus, dan memiliki kontras yang baik.");
   }
 
-  const formData = new FormData();
-  formData.append("file", file, file.name);
-  formData.append("fallback_text", extractedText);
-  const res = await fetch(`${API_BASE}/analyze/photo`, {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || "Gagal menganalisis teks yang dibaca dari foto.");
-  }
-
-  return res.json();
+  // OCR is already complete in the browser. Send only the reviewed text so
+  // the backend does not decode the same image a second time.
+  return analyzeText(extractedText, "photo");
 }
 
 function normalizeOcrText(text: string) {

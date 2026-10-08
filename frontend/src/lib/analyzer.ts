@@ -82,7 +82,7 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     code: "R4",
     name: "Identitas Perusahaan Tidak Jelas",
     weight: 10,
-    hard_flag: true,
+    hard_flag: false,
     is_active: true,
     category: "Profil Perusahaan",
     description: "Email perekrut menggunakan domain publik/gratis atau identitas email anonim, bukan alamat domain resmi perusahaan.",
@@ -265,7 +265,7 @@ export function analyzeJobText(text: string) {
 
   const lower = cleaned.toLowerCase();
   let totalScore = 0;
-  let hardFlagDetected = false;
+  let criticalFloor = 0;
   let highCount = 0;
   let attentionCount = 0;
   const detectedNames: string[] = [];
@@ -278,6 +278,10 @@ export function analyzeJobText(text: string) {
     for (const pattern of ind.patterns) {
       const match = pattern.exec(cleaned);
       if (match) {
+        const contextBefore = cleaned.slice(Math.max(0, match.index - 42), match.index);
+        if (/\b(?:tidak|tanpa|bebas|dilarang|jangan)\b[^.!?\n]{0,42}$/i.test(contextBefore)) {
+          continue;
+        }
         matches.push(match[0]);
         if (!evidence) {
           const start = Math.max(0, match.index - 50);
@@ -293,6 +297,10 @@ export function analyzeJobText(text: string) {
       for (const kw of ind.keywords) {
         const idx = lower.indexOf(kw.toLowerCase());
         if (idx !== -1) {
+          const contextBefore = cleaned.slice(Math.max(0, idx - 42), idx);
+          if (/\b(?:tidak|tanpa|bebas|dilarang|jangan)\b[^.!?\n]{0,42}$/i.test(contextBefore)) {
+            continue;
+          }
           matches.push(kw);
           if (!evidence) {
             const start = Math.max(0, idx - 50);
@@ -310,7 +318,9 @@ export function analyzeJobText(text: string) {
     let status_badge: "safe" | "attention" | "high" = "safe";
     let scoreContrib = 0;
 
-    const hardFlagEvidence = ind.code === "R6"
+    const hardFlagEvidence = ind.code === "R1"
+      ? /(?:wajib|harus|diminta)\s*(?:membayar|transfer|bayar|setor|deposit|top\s*up)|(?:transfer|bayar|setor)\s*(?:dulu|biaya|uang|deposit)|deposit\s*(?:awal|sebesar|rp|\d+)/i.test(cleaned)
+      : ind.code === "R6"
       ? /(?:tugas|misi|like|subscribe|follow|rating)[^.!?\n]{0,120}(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)|(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)[^.!?\n]{0,120}(?:tugas|misi|like|subscribe|follow|rating)/i.test(cleaned)
       : ind.code === "R9"
         ? /(?:tanpa\s*(?:izin\s*)?(?:bp2mi|p3mi)|tidak\s*(?:terdaftar|berizin|terverifikasi).{0,35}(?:bp2mi|p3mi)|visa\s*(?:turis|kunjungan)|tppo|perdagangan\s*orang)/i.test(cleaned)
@@ -324,7 +334,7 @@ export function analyzeJobText(text: string) {
       status_label = "! Risiko tinggi";
       status_badge = "high";
       scoreContrib = 0;
-      hardFlagDetected = true;
+      criticalFloor = Math.max(criticalFloor, ind.code === "R9" ? 65 : 80);
       highCount++;
       detectedNames.push(ind.name);
     } else if (matches.length > 0) {
@@ -353,18 +363,18 @@ export function analyzeJobText(text: string) {
     };
   });
 
-  const finalScore = hardFlagDetected ? 100 : Math.min(100, Math.round(totalScore));
+  const finalScore = Math.min(100, Math.max(criticalFloor, Math.round(totalScore)));
   let riskLevel: "RISIKO RENDAH" | "RISIKO SEDANG" | "RISIKO TINGGI" = "RISIKO RENDAH";
   let riskColor: "green" | "amber" | "red" = "green";
   let riskTheme = "#16a34a";
   let levelCode: "LOW" | "MEDIUM" | "HIGH" = "LOW";
 
-  if (hardFlagDetected || finalScore >= 40) {
+  if (finalScore >= 60) {
     riskLevel = "RISIKO TINGGI";
     riskColor = "red";
     riskTheme = "#dc2626";
     levelCode = "HIGH";
-  } else if (finalScore >= 5) {
+  } else if (finalScore >= 25) {
     riskLevel = "RISIKO SEDANG";
     riskColor = "amber";
     riskTheme = "#f59e0b";

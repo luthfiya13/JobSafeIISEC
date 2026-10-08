@@ -29,7 +29,7 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
       bgBadge: "bg-emerald-50 border-emerald-200 text-emerald-800",
       glow: "rgba(22, 163, 74, 0.15)",
       icon: ShieldCheck,
-      rangeText: "🟢 Skor 0–4: Risiko rendah"
+      rangeText: "🟢 Skor 0–24: risiko rendah; tidak berarti aman mutlak"
     },
     amber: {
       stroke: "#f59e0b",
@@ -38,7 +38,7 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
       bgBadge: "bg-amber-50 border-amber-200 text-amber-800",
       glow: "rgba(245, 158, 11, 0.15)",
       icon: AlertTriangle,
-      rangeText: "🟡 Skor 5–39 tanpa Hard Flag: Risiko sedang"
+      rangeText: "🟡 Skor 25–59: perlu klarifikasi dan verifikasi"
     },
     red: {
       stroke: "#dc2626",
@@ -47,7 +47,7 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
       bgBadge: "bg-red-50 border-red-200 text-red-800",
       glow: "rgba(220, 38, 38, 0.18)",
       icon: AlertOctagon,
-      rangeText: "🔴 Hard Flag atau skor ≥ 40: Risiko tinggi"
+      rangeText: "🔴 Skor 60–100: risiko tinggi; verifikasi sebelum melanjutkan"
     }
   };
 
@@ -121,8 +121,8 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
 
           {/* Dial ticks */}
           <text x="35" y="185" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">0</text>
-          <text x="85" y="45" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">5</text>
-          <text x="155" y="45" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">40</text>
+          <text x="85" y="45" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">25</text>
+          <text x="155" y="45" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">60</text>
           <text x="205" y="185" fill="#94a3b8" fontSize="10" fontWeight="600" textAnchor="middle">100</text>
         </svg>
 
@@ -154,6 +154,9 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
       <div className="text-center mt-2">
         <p className="text-xs text-slate-500 font-medium">
           {currentTheme.rangeText}
+        </p>
+        <p className="text-[11px] text-slate-400 mt-1">
+          Skor indikasi, bukan persentase kepastian penipuan.
         </p>
       </div>
     </div>
