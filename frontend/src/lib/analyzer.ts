@@ -217,6 +217,14 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
   }
 ];
 
+// Keep the browser fallback on the same probability scale as the API engine
+// (jobsafe_config.json). UI indicator weights are display metadata, not risk
+// probabilities, so summing them made browser and server scores disagree.
+const RISK_BASE_RATES: Record<string, number> = {
+  R1: 0.85, R2: 0.3, R3: 0.65, R4: 0.65, R5: 0.3,
+  R6: 0.88, R7: 0.55, R8: 0.25, R9: 0.8, R10: 0.4
+};
+
 export const VERIFICATION_STEPS = [
   {
     id: "v1",
@@ -269,6 +277,7 @@ export function analyzeJobText(text: string) {
   const lower = cleaned.toLowerCase();
   let totalScore = 0;
   let criticalFloor = 0;
+  let combinedRiskProbability = 0;
   let highCount = 0;
   let attentionCount = 0;
   const detectedNames: string[] = [];
@@ -347,7 +356,13 @@ export function analyzeJobText(text: string) {
       status = "PERLU_PERHATIAN";
       status_label = "⚠ Perlu diperhatikan";
       status_badge = "attention";
-      scoreContrib = weight;
+      // A single weak clue contributes less than a repeated, specific pattern.
+      // Cap the evidence confidence so keyword-only matches cannot dominate.
+      const evidenceConfidence = Math.min(0.78, 0.42 + Math.log2(matches.length + 1) * 0.12);
+      const baseRate = RISK_BASE_RATES[ind.code] ?? 0.25;
+      const contribution = baseRate * evidenceConfidence;
+      combinedRiskProbability = 1 - (1 - combinedRiskProbability) * (1 - contribution);
+      scoreContrib = contribution * 100;
       attentionCount++;
       detectedNames.push(ind.name);
     }
@@ -369,6 +384,15 @@ export function analyzeJobText(text: string) {
     };
   });
 
+  // Hard evidence contributes its calibrated base rate too; the severity floor
+  // ensures a confirmed critical pattern cannot be diluted by unrelated text.
+  for (const indicator of detectedIndicators) {
+    if (indicator.status === "RISIKO_TINGGI") {
+      const baseRate = RISK_BASE_RATES[indicator.code] ?? 0.25;
+      combinedRiskProbability = 1 - (1 - combinedRiskProbability) * (1 - baseRate * 0.92);
+    }
+  }
+  totalScore = combinedRiskProbability * 100;
   const finalScore = Math.min(100, Math.max(criticalFloor, Math.round(totalScore)));
   let riskLevel: "RISIKO RENDAH" | "RISIKO SEDANG" | "RISIKO TINGGI" = "RISIKO RENDAH";
   let riskColor: "green" | "amber" | "red" = "green";
@@ -391,7 +415,7 @@ export function analyzeJobText(text: string) {
     .filter((indicator) => indicator.status !== "TIDAK_TERDETEKSI")
     .map((indicator) => indicator.name);
   const findings = detectedTopics.length === 0
-    ? "Analisis tidak menemukan tanda risiko utama pada informasi yang diberikan."
+    ? "Belum ada tanda risiko utama yang terdeteksi pada teks ini. Skor rendah bukan jaminan lowongan aman; verifikasi perusahaan dan proses rekrutmen secara mandiri."
     : `Tanda yang perlu diperhatikan berkaitan dengan ${detectedTopics.join(", ")}.`;
   const preventiveAdvice = riskLevel === "RISIKO TINGGI"
     ? "Tunda proses lamaran. Jangan transfer uang atau mengirim data sensitif; verifikasi perusahaan melalui kanal resmi yang ditemukan secara mandiri."
