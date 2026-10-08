@@ -75,7 +75,8 @@ def detect(text: str, url: Optional[str] = None) -> Dict[str, Any]:
     # R1 — biaya/deposit untuk memperoleh pekerjaan
     r1 = _first(t, [
         r"\b(?:transfer|membayar|bayar|setor|menyetor)\b.{0,90}\b(?:biaya|deposit|dp|pendaftaran|registrasi|administrasi|jaminan|seragam|pelatihan|medical|slot|uang\s+(?:pendaftaran|registrasi|administrasi|jaminan|seragam|muka))\b",
-        r"\b(?:biaya|uang|deposit|dp)\s+(?:pendaftaran|registrasi|administrasi|jaminan|seragam|pelatihan|medical|keberangkatan|training)\b.{0,100}\b(?:rp|rb|ribu|juta|rekening|ditanggung (?:peserta|pelamar)|non.?refundable|tidak dapat dikembalikan)\b",
+        r"\b(?:biaya|uang|dana)\s+(?:awal\s+)?(?:pendaftaran|registrasi|administrasi|jaminan|seragam|pelatihan|medical|keberangkatan|visa|dokumen|training)\b.{0,120}\b(?:rp\.?\s?[\d.,]+|rb|ribu|juta|rekening|ditanggung (?:peserta|pelamar)|non.?refundable|tidak dapat dikembalikan|dicicil)\b",
+        r"\b(?:biaya|uang|dana)\s+awal\s+(?:pendaftaran|registrasi|keberangkatan|pengurusan)\b",
         r"\b(?:uang muka|advance payment|non.?refundable)\b",
         r"\b(?:untuk|agar)\s+(?:mengamankan|mengunci|memastikan)\s+(?:slot|kursi|posisi|kuota)\b.{0,80}\b(?:bayar|transfer|biaya|uang)\b",
         r"\b(?:bawa|siapkan)\s+(?:uang|biaya)\b.{0,80}\b(?:administrasi|pendaftaran|registrasi|seragam)\b",
@@ -201,9 +202,28 @@ def detect(text: str, url: Optional[str] = None) -> Dict[str, Any]:
     }
     sigs = [k for k, p in sig_pat.items() if re.search(p, tl)]
     scam_dest = bool(re.search(r"\b(?:kamboja|cambodia|myanmar|laos|filipina)\b", tl)) and bool(re.search(r"\b(?:customer service|cs|admin|operator|telemarketing|typing|online)\b", tl))
+    high_risk_destination = _first(t, [r"\b(?:kamboja|cambodia|myanmar|laos)\b"])
+    migration_paperwork = _first(t, [
+        r"\b(?:paspor|passport|visa|pengurusan dokumen|dokumen dan visa|keberangkatan|tiket pesawat|penempatan)\b[^.!?\n]{0,90}",
+        r"\b(?:paspor|passport|visa|pengurusan dokumen|dokumen dan visa|keberangkatan|tiket pesawat|penempatan)\b"
+    ])
+    migration_fee = _first(t, [
+        r"\b(?:biaya|uang|dana)\s+(?:awal\s+)?(?:pendaftaran|keberangkatan|visa|dokumen|pengurusan)\b[^.!?\n]{0,100}",
+        r"\b(?:rp\.?\s?[\d.,]+)\b[^.!?\n]{0,50}\b(?:biaya|pendaftaran|visa|dokumen|keberangkatan)\b"
+    ])
+    # Destination alone is not treated as evidence of trafficking. The
+    # combination of a high-risk destination, employer-arranged migration
+    # paperwork, and an upfront recruitment/departure fee is a strong cluster.
+    migration_fee_cluster = bool(high_risk_destination and migration_paperwork and migration_fee)
     if ctx["overseas"] or scam_dest:
         if "tahan" in sigs or len(sigs) >= 2 or (scam_dest and sigs):
             res["R9"].append(evidence("R9", 0.9, _first(t, list(sig_pat.values())) or "Kamboja/Myanmar/Laos + pekerjaan online", "Kombinasi sinyal migrasi non-prosedural/eksploitasi."))
+        elif migration_fee_cluster:
+            res["R9"].append(evidence(
+                "R9", 0.86,
+                f"{high_risk_destination} ... {migration_paperwork.strip()} ... {migration_fee.strip()}",
+                "Tujuan kerja luar negeri digabung dengan pengurusan paspor/visa dan pungutan awal dari pelamar; verifikasi izin penempatan dan biaya secara independen."
+            ))
         elif scam_dest:
             res["R9"].append(evidence("R9", 0.8, "Lokasi berisiko tinggi + pekerjaan online/CS", "Pola rekrutmen ke pusat penipuan online (Kamboja/Myanmar/Laos)."))
         elif len(sigs) == 1:

@@ -23,11 +23,13 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     why_important: "Perusahaan legal dan beritikad baik umumnya menanggung seluruh biaya rekrutmen. Permintaan uang di awal proses lamaran adalah indikator paling umum dari risiko penipuan kerja.",
     keywords: [
       "biaya pendaftaran", "uang pendaftaran", "biaya pelatihan", "uang jaminan", "deposit", 
+      "biaya awal pendaftaran", "biaya awal keberangkatan", "biaya pengurusan visa",
       "biaya seragam", "biaya materai", "biaya administrasi", "transfer dulu", "bayar dulu",
       "biaya modul", "biaya kartu member", "biaya tes", "biaya medical", "reimburse tiket",
       "uang pangkal", "biaya psikotes", "biaya proses", "biaya id card"
     ],
     patterns: [
+      /(?:biaya|uang|dana)\s+(?:awal\s+)?(?:pendaftaran|registrasi|administrasi|keberangkatan|pengurusan\s+(?:visa|dokumen))[^.!?\n]{0,100}(?:rp\.?\s*[\d.,]+|\d[\d.,]*\s*(?:rb|ribu|juta))/i,
       /(?:biaya|uang|dana)\s*(?:pendaftaran|registrasi|admin|administrasi|pelatihan|seragam|materai|deposit|jaminan|tes|training)/i,
       /(?:wajib|harus|diminta)\s*(?:membayar|transfer|deposit|topup|top\s*up)\s*(?:sebesar|sejumlah|rp|\d+)/i,
       /(?:deposit|jaminan)\s*(?:awal|sebesar|rp|\d+)/i,
@@ -184,10 +186,11 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     description: "Tawaran pekerjaan di luar negeri (seperti Kamboja, Myanmar, Filipina, dll.) tanpa kejelasan izin resmi P3MI, visa kerja resmi, atau verifikasi BP2MI.",
     why_important: "Banyak penipuan kerja luar negeri berujung pada tindak pidana perdagangan orang (TPPO) atau operator online scam di perbatasan, dengan visa turis bukan visa kerja resmi.",
     keywords: [
-      "kerja kamboja", "kerja myanmar", "kerja luar negeri tanpa bahasa", "visa turis dulu",
+      "kerja kamboja", "tujuan kamboja", "kamboja", "kerja myanmar", "kerja luar negeri tanpa bahasa", "visa turis dulu",
       "berangkat dulu visa menyusul", "operator scam", "customer service kamboja", "gaji dollar luar negeri"
     ],
     patterns: [
+      /(?:tujuan|penempatan|lokasi\s+kerja)\s*:?\s*(?:di\s+|ke\s+)?(?:kamboja|cambodia|myanmar|laos|filipina)/i,
       /(?:kerja|lowongan)\s*(?:di|ke)\s*(?:kamboja|myanmar|laos|filipina|cambodia)\s*(?:gaji\s*dollar|tanpa\s*syarat|cs|admin)/i,
       /(?:visa\s*kunjungan|visa\s*turis)\s*(?:dulu|nanti\s*diubah|bisa\s*bekerja)/i,
       /(?:tanpa\s*izin\s*bp2mi|tanpa\s*p3mi|berangkat\s*cepat\s*tanpa\s*birokrasi)/i
@@ -319,11 +322,14 @@ export function analyzeJobText(text: string) {
     let scoreContrib = 0;
 
     const hardFlagEvidence = ind.code === "R1"
-      ? /(?:wajib|harus|diminta)\s*(?:membayar|transfer|bayar|setor|deposit|top\s*up)|(?:transfer|bayar|setor)\s*(?:dulu|biaya|uang|deposit)|deposit\s*(?:awal|sebesar|rp|\d+)/i.test(cleaned)
+      ? /(?:wajib|harus|diminta)\s*(?:membayar|transfer|bayar|setor|deposit|top\s*up)|(?:transfer|bayar|setor)\s*(?:dulu|biaya|uang|deposit)|deposit\s*(?:awal|sebesar|rp|\d+)|(?:biaya|uang|dana)\s+(?:awal\s+)?(?:pendaftaran|registrasi|administrasi|keberangkatan|pengurusan\s+(?:visa|dokumen))[^.!?\n]{0,100}(?:rp\.?\s*[\d.,]+|\d[\d.,]*\s*(?:rb|ribu|juta))/i.test(cleaned)
       : ind.code === "R6"
       ? /(?:tugas|misi|like|subscribe|follow|rating)[^.!?\n]{0,120}(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)|(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)[^.!?\n]{0,120}(?:tugas|misi|like|subscribe|follow|rating)/i.test(cleaned)
       : ind.code === "R9"
         ? /(?:tanpa\s*(?:izin\s*)?(?:bp2mi|p3mi)|tidak\s*(?:terdaftar|berizin|terverifikasi).{0,35}(?:bp2mi|p3mi)|visa\s*(?:turis|kunjungan)|tppo|perdagangan\s*orang)/i.test(cleaned)
+          || (/(?:kamboja|cambodia|myanmar|laos)/i.test(cleaned)
+            && /(?:paspor|passport|visa|pengurusan\s+dokumen|keberangkatan|tiket\s+pesawat)/i.test(cleaned)
+            && /(?:biaya\s+(?:awal\s+)?(?:pendaftaran|keberangkatan|visa|dokumen)|rp\.?\s*[\d.,]+[^.!?\n]{0,50}(?:biaya|pendaftaran|visa|dokumen))/i.test(cleaned))
         : true;
     if ((ind.code === "R6" || ind.code === "R9") && !hardFlagEvidence) {
       matches.length = 0;
