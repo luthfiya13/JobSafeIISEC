@@ -224,7 +224,7 @@ export default function LandingPage() {
                 10 Indikator Risiko Digital
               </h2>
               <p className="text-slate-600 text-sm mt-2">
-                JOBSAFE menggunakan model pembobotan terstruktur untuk mendeteksi anomali pada penawaran kerja digital (Total Bobot 100%).
+                Model JOBSAFE v3 menggabungkan sinyal berbasis aturan dan klasifikasi statistik. Daftar ini menjelaskan sinyal yang dianalisis; skor akhirnya tidak dihitung dengan penjumlahan persentase kartu.
               </p>
             </div>
 
@@ -238,9 +238,6 @@ export default function LandingPage() {
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <span className="text-xs font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
                         {ind.code}
-                      </span>
-                      <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                        Bobot {ind.weight}%
                       </span>
                     </div>
 

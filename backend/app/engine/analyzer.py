@@ -1,170 +1,150 @@
-import re
-from typing import List, Dict, Any, Optional
-from app.engine.indicators import DEFAULT_INDICATORS, VERIFICATION_STEPS
+"""Adapter exposing the hybrid model with the frontend's API contract."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+from typing import Any, Dict, List
+
+from app.engine.indicators import DEFAULT_INDICATORS
+from app.database.db import get_risk_thresholds
+
+MODEL_PACKAGE_ROOT = Path(__file__).resolve().parents[3] / "Model" / "src" / "jobsafe"
+if str(MODEL_PACKAGE_ROOT) not in sys.path:
+    sys.path.insert(0, str(MODEL_PACKAGE_ROOT))
+
+from jobsafe import JobsafeHybridEngine  # noqa: E402
+
+_MODEL_ENGINE = JobsafeHybridEngine()
+
+LEVEL_MAP = {
+    "LOW": ("RISIKO RENDAH", "green", "#16a34a"),
+    "MEDIUM": ("RISIKO SEDANG", "amber", "#f59e0b"),
+    "HIGH": ("RISIKO TINGGI", "red", "#dc2626"),
+}
+
 
 class RiskAnalyzer:
-    def __init__(self, indicators: Optional[List[Dict[str, Any]]] = None):
-        self.indicators = indicators if indicators is not None else DEFAULT_INDICATORS
+    def __init__(self):
+        # The public/admin legacy indicator table is descriptive only. Scoring
+        # always uses the versioned v3 model configuration.
+        self.indicators = DEFAULT_INDICATORS
+        self.engine = _MODEL_ENGINE
 
-    def clean_text(self, text: str) -> str:
-        if not text:
-            return ""
-        # Preserve newlines but normalize multiple spaces
-        text = re.sub(r"[ \t]+", " ", text)
-        return text.strip()
+    def indicator_catalog(self) -> List[Dict[str, Any]]:
+        model_indicators = self.engine.rule_engine.config.get("indicators", {})
+        return [
+            {
+                "code": configured["code"],
+                "name": model_indicators.get(configured["code"], {}).get("name", configured["name"]),
+                "category": configured.get("category", "Umum"),
+                "description": configured["description"],
+                "why_important": configured["why_important"],
+            }
+            for configured in self.indicators
+        ]
 
-    def find_snippet(self, text: str, matched_span: tuple, window: int = 70) -> str:
-        start, end = matched_span
-        snippet_start = max(0, start - window)
-        snippet_end = min(len(text), end + window)
-        
-        snippet = text[snippet_start:snippet_end].strip()
-        # Clean line breaks in snippet for neat display
-        snippet = " ".join(snippet.split())
-        
-        prefix = "..." if snippet_start > 0 else ""
-        suffix = "..." if snippet_end < len(text) else ""
-        return f'{prefix}"{snippet}"{suffix}'
+    def model_status(self) -> Dict[str, Any]:
+        return {
+            "engine_version": self.engine.rule_engine.config.get("version", "unknown"),
+            "ml_loaded": self.engine.ml_model is not None,
+        }
 
     def analyze(self, text: str) -> Dict[str, Any]:
-        cleaned = self.clean_text(text)
-        lower_text = cleaned.lower()
+        cleaned = (text or "").strip()
+        if len(cleaned) < 20:
+            raise ValueError("Teks lowongan terlalu pendek. Masukkan minimal 20 karakter untuk analisis.")
 
-        if len(cleaned) < 15:
-            raise ValueError("Teks lowongan terlalu pendek. Masukkan minimal 15 karakter untuk analisis.")
+        low_max, high_min = get_risk_thresholds()
+        self.engine.rule_engine.low_max = low_max
+        self.engine.rule_engine.high_min = high_min
+        model_result = self.engine.analyze(cleaned, mode="hybrid")
+        raw_level = model_result.get("risk_level", "MEDIUM")
+        if raw_level == "INSUFFICIENT_INPUT":
+            message = model_result.get("message", "Informasi lowongan belum cukup untuk dinilai.")
+            checklist = model_result.get("verification_checklist", [])
+            return {
+                "risk_score": None,
+                "risk_level": "INSUFFICIENT_INPUT",
+                "risk_color": "gray",
+                "risk_theme": "#64748b",
+                "level_code": "INSUFFICIENT_INPUT",
+                "summary": message,
+                "findings_summary": message,
+                "preventive_advice": "Tempel teks lowongan yang lebih lengkap lalu jalankan analisis kembali.",
+                "indicators_detected_count": 0,
+                "indicators_attention_count": 0,
+                "indicators_high_count": 0,
+                "indicators": [],
+                "verification_steps": [
+                    {"id": f"v{index + 1}", "title": item, "desc": "Lakukan pemeriksaan ini secara mandiri."}
+                    for index, item in enumerate(checklist)
+                ],
+                "disclaimer": model_result.get("disclaimer", ""),
+                "model_meta": model_result.get("meta", {}),
+                "risk_thresholds": {"low_max": low_max, "high_min": high_min},
+            }
 
-        detected_indicators = []
-        total_calculated_score = 0.0
-        hard_flag_detected = False
-        high_severity_count = 0
+        risk_level, risk_color, risk_theme = LEVEL_MAP[raw_level]
+        detected_by_code = {item["code"]: item for item in model_result.get("detected_indicators", [])}
+        frontend_indicators = []
+        high_count = 0
         attention_count = 0
-        detected_names = []
 
-        for ind in self.indicators:
-            if not ind.get("is_active", True):
-                continue
-
-            matches = []
-            matched_spans = []
-
-            # 1. Regex patterns check
-            for pattern in ind.get("patterns", []):
-                for match in re.finditer(pattern, lower_text, re.IGNORECASE):
-                    matched_spans.append(match.span())
-                    matches.append(match.group(0))
-
-            # 2. Keyword check (if not already found by regex)
-            if not matches:
-                for kw in ind.get("keywords", []):
-                    idx = lower_text.find(kw.lower())
-                    if idx != -1:
-                        matched_spans.append((idx, idx + len(kw)))
-                        matches.append(kw)
-
-            hard_flag_evidence = (
-                bool(re.search(r"(?:tugas|misi|like|subscribe|follow|rating)[^.!?\n]{0,120}(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)|(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)[^.!?\n]{0,120}(?:tugas|misi|like|subscribe|follow|rating)", lower_text))
-                if ind["code"] == "R6" else
-                bool(re.search(r"(?:tanpa\s*(?:izin\s*)?(?:bp2mi|p3mi)|tidak\s*(?:terdaftar|berizin|terverifikasi).{0,35}(?:bp2mi|p3mi)|visa\s*(?:turis|kunjungan)|tppo|perdagangan\s*orang)", lower_text))
-                if ind["code"] == "R9" else True
-            )
-            if ind["code"] in ("R6", "R9") and not hard_flag_evidence:
-                matches = []
-                matched_spans = []
-
-            # Determine indicator status and contribution
-            weight = ind.get("weight", 10)
-            
-            if len(matches) > 0 and ind.get("hard_flag", False) and hard_flag_evidence:
-                status = "RISIKO_TINGGI"  # ! Risiko tinggi
-                status_label = "! Risiko tinggi"
-                status_badge = "high"
-                score_contrib = 0.0
-                hard_flag_detected = True
-                high_severity_count += 1
-                detected_names.append(ind["name"])
-            elif len(matches) > 0:
-                status = "PERLU_PERHATIAN"  # ⚠ Perlu diperhatikan
-                status_label = "⚠ Perlu diperhatikan"
-                status_badge = "attention"
-                score_contrib = float(weight)
+        for configured in self.indicators:
+            detected = detected_by_code.get(configured["code"])
+            model_indicator = self.engine.rule_engine.config.get("indicators", {}).get(configured["code"], {})
+            is_high = bool(detected and (
+                detected.get("strength") == "STRONG"
+                or (configured.get("hard_flag", False) and configured["code"] in {"R1", "R6", "R9"})
+            ))
+            if is_high:
+                status, status_label, status_badge = "RISIKO_TINGGI", "! Risiko tinggi", "high"
+                high_count += 1
+            elif detected:
+                status, status_label, status_badge = "PERLU_PERHATIAN", "⚠ Perlu diperhatikan", "attention"
                 attention_count += 1
-                detected_names.append(ind["name"])
             else:
-                status = "TIDAK_TERDETEKSI"  # ✓ Tidak terdeteksi
-                status_label = "✓ Tidak terdeteksi"
-                status_badge = "safe"
-                score_contrib = 0.0
+                status, status_label, status_badge = "TIDAK_TERDETEKSI", "✓ Tidak terdeteksi", "safe"
 
-            evidence = None
-            if matched_spans:
-                # Get the best snippet
-                evidence = self.find_snippet(cleaned, matched_spans[0])
-
-            total_calculated_score += score_contrib
-
-            detected_indicators.append({
-                "code": ind["code"],
-                "name": ind["name"],
-                "category": ind.get("category", "Umum"),
-                "weight": weight,
+            frontend_indicators.append({
+                "code": configured["code"],
+                "name": model_indicator.get("name", configured["name"]),
+                "category": configured.get("category", "Umum"),
                 "status": status,
                 "status_label": status_label,
                 "status_badge": status_badge,
-                "description": ind["description"],
-                "why_important": ind["why_important"],
-                "matches_count": len(matches),
-                "evidence": evidence
+                "description": configured["description"],
+                "why_important": configured["why_important"],
+                "matches_count": 1 if detected else 0,
+                "evidence": detected.get("evidence") if detected else None,
+                "reason": detected.get("reason") if detected else None,
+                "legal_basis": detected.get("legal_basis") if detected else None,
+                "syariah_basis": detected.get("syariah_basis") if detected else None,
             })
 
-        # Cap score at 100 and round
-        final_score = 100 if hard_flag_detected else min(100, int(round(total_calculated_score)))
-
-        # Determine Risk Category
-        if hard_flag_detected or final_score >= 40:
-            risk_level = "RISIKO TINGGI"
-            risk_color = "red"
-            risk_theme = "#dc2626"
-            level_code = "HIGH"
-        elif final_score >= 5:
-            risk_level = "RISIKO SEDANG"
-            risk_color = "amber"
-            risk_theme = "#f59e0b"
-            level_code = "MEDIUM"
-        else:
-            risk_level = "RISIKO RENDAH"
-            risk_color = "green"
-            risk_theme = "#16a34a"
-            level_code = "LOW"
-
-        # Explain detected signals and practical prevention steps without reporting counts.
-        total_detected = high_severity_count + attention_count
-        findings = (
-            "Analisis tidak menemukan tanda risiko utama pada informasi yang diberikan."
-            if not detected_names else
-            f"Tanda yang perlu diperhatikan berkaitan dengan {', '.join(detected_names)}."
-        )
-        preventive_advice = (
-            "Tunda proses lamaran. Jangan transfer uang atau mengirim data sensitif; verifikasi perusahaan melalui kanal resmi yang ditemukan secara mandiri."
-            if risk_level == "RISIKO TINGGI" else
-            "Minta penjelasan tertulis dan verifikasi identitas perekrut serta rincian pekerjaan melalui kanal resmi sebelum melanjutkan."
-            if risk_level == "RISIKO SEDANG" else
-            "Tetap periksa identitas perusahaan dan kontak perekrut melalui sumber resmi sebelum membagikan dokumen pribadi."
-        )
-        summary = f"{findings} {preventive_advice}"
-
+        findings = model_result.get("risk_explanation") or model_result.get("message", "")
+        recommendations = model_result.get("recommended_actions", [])
+        preventive_advice = " ".join(recommendations)
+        checklist = model_result.get("verification_checklist", [])
         return {
-            "risk_score": final_score,
+            "risk_score": int(model_result.get("risk_score") or 0),
             "risk_level": risk_level,
             "risk_color": risk_color,
             "risk_theme": risk_theme,
-            "level_code": level_code,
-            "summary": summary,
+            "level_code": raw_level,
+            "summary": f"{findings} {preventive_advice}".strip(),
             "findings_summary": findings,
             "preventive_advice": preventive_advice,
-            "indicators_detected_count": total_detected,
+            "indicators_detected_count": high_count + attention_count,
             "indicators_attention_count": attention_count,
-            "indicators_high_count": high_severity_count,
-            "indicators": detected_indicators,
-            "verification_steps": VERIFICATION_STEPS,
-            "disclaimer": "JOBSAFE memberikan penilaian risiko berdasarkan informasi yang tersedia. Hasil ini bukan keputusan hukum atau jaminan bahwa suatu lowongan pasti aman atau penipuan."
+            "indicators_high_count": high_count,
+            "indicators": frontend_indicators,
+            "verification_steps": [
+                {"id": f"v{index + 1}", "title": item, "desc": "Lakukan pemeriksaan ini secara mandiri."}
+                for index, item in enumerate(checklist)
+            ],
+            "disclaimer": model_result.get("disclaimer", ""),
+            "model_meta": model_result.get("meta", {}),
+            "risk_thresholds": {"low_max": low_max, "high_min": high_min},
         }

@@ -79,7 +79,7 @@ export default function IndicatorCard({ indicator, onSelect }: IndicatorCardProp
       className={`clean-card p-5 cursor-pointer transition-all duration-200 hover:shadow-sm ${borderClass} ${bgClass} flex flex-col justify-between`}
     >
       <div>
-        {/* Card Header: Icon, Code, Weight, Status */}
+        {/* Card Header: model indicator and status */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
             <div
@@ -97,9 +97,6 @@ export default function IndicatorCard({ indicator, onSelect }: IndicatorCardProp
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   {indicator.code}
-                </span>
-                <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                  Bobot {indicator.weight}%
                 </span>
               </div>
               <h3 className="font-bold text-slate-900 text-base leading-tight mt-0.5">

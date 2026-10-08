@@ -1,42 +1,21 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Check, Loader2, Circle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface LoadingAnalysisProps {
-  onComplete?: () => void;
   inputType?: "text" | "photo" | "link";
 }
 
-const STEPS = [
-  "Membaca informasi lowongan",
-  "Mengekstraksi informasi penting",
-  "Menganalisis indikator risiko",
-  "Menghitung Risk Score",
-  "Menyiapkan rekomendasi verifikasi"
-];
-
-export default function LoadingAnalysis({ onComplete, inputType = "text" }: LoadingAnalysisProps) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+export default function LoadingAnalysis({ inputType = "text" }: LoadingAnalysisProps) {
   const [isTakingLong, setIsTakingLong] = useState(false);
 
   useEffect(() => {
-    // Progressive cadence
-    const timeouts = [
-      setTimeout(() => setCurrentStepIndex(1), 400),
-      setTimeout(() => setCurrentStepIndex(2), 850),
-      setTimeout(() => setCurrentStepIndex(3), 1350),
-      setTimeout(() => setCurrentStepIndex(4), 1800),
-      setTimeout(() => setIsTakingLong(true), 10000),
-      setTimeout(() => {
-        if (onComplete) onComplete();
-      }, 2300),
-    ];
-
-    return () => {
-      timeouts.forEach(clearTimeout);
-    };
-  }, [onComplete]);
+    // The API currently exposes one atomic analysis request, so do not claim
+    // that internal stages completed based on elapsed time.
+    const timeout = setTimeout(() => setIsTakingLong(true), 10000);
+    return () => clearTimeout(timeout);
+  }, []);
 
   return (
     <div className="min-h-[500px] flex items-center justify-center p-6">
@@ -58,42 +37,10 @@ export default function LoadingAnalysis({ onComplete, inputType = "text" }: Load
             : "Sistem sedang memindai pola teks terhadap 10 indikator risiko digital..."}
         </p>
 
-        {/* 5 Progress Steps */}
-        <div className="space-y-3.5 text-left border-t border-slate-100 pt-6">
-          {STEPS.map((step, idx) => {
-            const isDone = idx < currentStepIndex;
-            const isCurrent = idx === currentStepIndex;
-
-            return (
-              <div
-                key={step}
-                className={`flex items-center gap-3 text-sm transition-all duration-300 ${
-                  isDone
-                    ? "text-slate-800 font-medium"
-                    : isCurrent
-                    ? "text-blue-600 font-semibold"
-                    : "text-slate-400"
-                }`}
-              >
-                {/* Step indicator symbol */}
-                <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0">
-                  {isDone ? (
-                    <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                    </div>
-                  ) : isCurrent ? (
-                    <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center animate-pulse">
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                    </div>
-                  ) : (
-                    <Circle className="w-4 h-4 text-slate-300 stroke-[1.5]" />
-                  )}
-                </div>
-
-                <span>{step}</span>
-              </div>
-            );
-          })}
+        <div className="border-t border-slate-100 pt-6 text-sm font-medium text-blue-700" aria-live="polite">
+          {inputType === "photo" ? "OCR berjalan di browser, kemudian teks dikirim ke model." :
+            inputType === "link" ? "Backend sedang mengambil teks halaman dan menunggu model." :
+              "Permintaan sedang diproses oleh model JOBSAFE v3."}
         </div>
 
         {isTakingLong && inputType === "photo" && (
@@ -104,7 +51,7 @@ export default function LoadingAnalysis({ onComplete, inputType = "text" }: Load
 
         <div className="mt-8 pt-4 border-t border-slate-100">
           <span className="text-[11px] text-slate-400">
-            Penilaian objektif berbasis indikator tanpa bias mutlak
+            Status menunggu respons layanan analisis
           </span>
         </div>
       </div>

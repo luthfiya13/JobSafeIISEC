@@ -27,7 +27,8 @@ import {
   analyzeText,
   analyzeUrl,
   analyzePhoto,
-  readTextFromImage
+  readTextFromImage,
+  submitReport
 } from "@/lib/api";
 
 export default function PeriksaPage() {
@@ -191,10 +192,21 @@ export default function PeriksaPage() {
     setShowReportForm(true);
   };
 
-  const handleReportSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleReportSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!complaintText.trim()) return;
-    setReportMessage("Tampilan demo saja: aduan belum dikirim atau disimpan.");
+    try {
+      await submitReport({
+        analysis_id: result?.id,
+        listing_text: result?.extracted_text || result?.raw_input || "Teks lowongan tidak tersedia.",
+        complaint: complaintText.trim(),
+      });
+      setReportMessage("Aduan berhasil disimpan.");
+      setShowReportForm(false);
+      setComplaintText("");
+    } catch (error: unknown) {
+      setReportMessage(error instanceof Error ? error.message : "Aduan gagal disimpan.");
+    }
   };
 
   return (
@@ -526,12 +538,21 @@ export default function PeriksaPage() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
               {/* Left Column: Risk Meter */}
               <div className="md:col-span-5 flex flex-col">
-                <RiskGauge
-                  score={result.risk_score}
-                  level={result.risk_level}
-                  color={result.risk_color}
-                  size={260}
-                />
+                {result.risk_score !== null && result.risk_color !== "gray" ? (
+                  <RiskGauge
+                    score={result.risk_score}
+                    level={result.risk_level}
+                    color={result.risk_color}
+                    thresholds={result.risk_thresholds}
+                    size={260}
+                  />
+                ) : (
+                  <div className="h-full min-h-64 rounded-2xl border border-slate-300 bg-slate-100 p-6 flex flex-col items-center justify-center text-center">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Skor tidak tersedia</span>
+                    <h2 className="mt-2 text-xl font-extrabold text-slate-700">Informasi belum cukup</h2>
+                    <p className="mt-2 max-w-sm text-sm text-slate-600">Model tidak memberikan tingkat risiko karena teks belum memuat informasi lowongan yang memadai.</p>
+                  </div>
+                )}
               </div>
 
               {/* Right Column: Ringkasan Hasil */}
@@ -542,7 +563,9 @@ export default function PeriksaPage() {
                       Ringkasan
                     </h3>
                     <span className="text-[11px] font-semibold text-slate-400">
-                      ID: #{result.id || "TEMP"}
+                      {result.model_meta?.engine_version
+                        ? `Model v${result.model_meta.engine_version}${result.model_meta.ml_enabled ? " · ML aktif" : " · rule-only"}`
+                        : "Hasil sementara"}
                     </span>
                   </div>
 
@@ -583,7 +606,7 @@ export default function PeriksaPage() {
             </div>
 
             {/* SECTION INDIKATOR YANG TERDETEKSI (10 CARDS) */}
-            <div className="space-y-4">
+            {result.indicators.length > 0 && <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -604,7 +627,7 @@ export default function PeriksaPage() {
                   />
                 ))}
               </div>
-            </div>
+            </div>}
 
             {/* SECTION REKOMENDASI VERIFIKASI (INTERACTIVE CHECKLIST) */}
             <VerificationChecklist steps={result.verification_steps} />
@@ -649,6 +672,9 @@ export default function PeriksaPage() {
                     <h2 id="report-form-title" className="text-lg font-bold text-slate-900">Form Aduan Lowongan</h2>
                     <p className="mt-1 text-sm text-slate-600">
                       Periksa teks lowongan berikut dan jelaskan alasan Anda melaporkannya.
+                    </p>
+                    <p className="mt-2 text-xs text-amber-800">
+                      Teks lowongan dan keterangan aduan akan disimpan agar admin dapat meninjau laporan. Hindari memasukkan data pribadi Anda atau orang lain.
                     </p>
                   </div>
 

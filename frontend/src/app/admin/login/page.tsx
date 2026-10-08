@@ -8,8 +8,8 @@ import { adminLogin } from "@/lib/api";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@jobsafe.id");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -119,7 +119,7 @@ export default function AdminLoginPage() {
 
         <div className="mt-8 pt-5 border-t border-slate-800/80 text-center">
           <p className="text-[11px] text-slate-500">
-            Kredensial Default Demo: <code className="text-slate-300">admin@jobsafe.id</code> / <code className="text-slate-300">admin123</code>
+            Kredensial admin ditetapkan oleh pengelola pada konfigurasi backend.
           </p>
         </div>
       </div>

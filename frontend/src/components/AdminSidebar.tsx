@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   ShieldCheck,
+  MessageSquare,
   ChevronRight,
   ExternalLink
 } from "lucide-react";
@@ -36,6 +37,11 @@ export default function AdminSidebar() {
       label: "Riwayat Analisis",
       href: "/admin/analyses",
       icon: History,
+    },
+    {
+      label: "Aduan Pengguna",
+      href: "/admin/reports",
+      icon: MessageSquare,
     },
     {
       label: "Indikator Risiko",

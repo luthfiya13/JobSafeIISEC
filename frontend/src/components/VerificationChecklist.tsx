@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckSquare, Square, CheckCircle, ShieldCheck } from "lucide-react";
+import { CheckSquare, Square, ShieldCheck } from "lucide-react";
 import { VerificationStep } from "@/lib/api";
 
 interface VerificationChecklistProps {
@@ -42,7 +42,7 @@ export default function VerificationChecklist({ steps }: VerificationChecklistPr
         {/* Progress Counter */}
         <div className="flex flex-col items-end shrink-0">
           <span className="text-xs font-semibold text-slate-700">
-            {completedCount} dari {totalSteps} Diverifikasi ({progressPercent}%)
+            {completedCount} dari {totalSteps} Ditandai selesai ({progressPercent}%)
           </span>
           <div className="w-36 h-2 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
             <div
@@ -97,12 +97,9 @@ export default function VerificationChecklist({ steps }: VerificationChecklistPr
         })}
       </div>
 
-      {completedCount === totalSteps && totalSteps > 0 && (
-        <div className="mt-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2.5 text-emerald-800 text-xs font-semibold animate-in fade-in duration-300">
-          <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
-          <span>Luar biasa! Anda telah menyelesaikan seluruh poin verifikasi mandiri sebelum memutuskan untuk melamar.</span>
-        </div>
-      )}
+      <p className="mt-5 text-[11px] text-slate-500">
+        Catatan: centang ini hanya mencatat tindakan Anda sendiri. JOBSAFE tidak mengklaim telah memverifikasi perusahaan atau kontak tersebut.
+      </p>
     </div>
   );
 }

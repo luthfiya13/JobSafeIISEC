@@ -60,7 +60,7 @@ export default function AdminAnalysesPage() {
               Riwayat Analisis
             </h1>
             <p className="text-slate-500 text-xs sm:text-sm mt-1">
-              Daftar seluruh pemindaian lowongan kerja yang diproses oleh sistem (Anonim tanpa PII).
+              Riwayat hasil model v3. Teks lowongan tidak disimpan; cuplikan disamarkan.
             </p>
           </div>
           <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-200/80 text-slate-700">
@@ -75,7 +75,7 @@ export default function AdminAnalysesPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari teks input atau ringkasan..."
+              placeholder="Cari ringkasan hasil..."
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-600"
             />
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />

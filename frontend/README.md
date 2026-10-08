@@ -31,10 +31,10 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy to Vercel
 
-Connect the repository to Vercel and set **Root Directory** to `frontend`. Vercel will detect Next.js; no environment variable is required for the built-in `/api` routes. Set `NEXT_PUBLIC_API_URL` only if you have separately deployed the FastAPI backend and intend to use it instead.
+Deploy the FastAPI backend as a separate service. Set **Root Directory** to `frontend` in Vercel and configure `NEXT_PUBLIC_API_URL` to the backend API base, for example `https://api.example.com/api`. There is no local analysis or admin demo fallback: analysis, authentication, history, settings, and reports require this backend.
 
-The photo OCR runs in the visitor's browser, so Vercel function time and upload limits do not apply to OCR processing. Tesseract downloads its worker and Indonesian/English language data from jsDelivr on first use; the visitor needs an internet connection, and the browser can cache those files afterward.
+The photo OCR runs in the visitor's browser. Tesseract downloads its worker and Indonesian/English language data from jsDelivr on first use; the visitor needs an internet connection, and the browser can cache those files afterward.
 
-The `backend/` FastAPI application is a separate service and is not deployed when Vercel's root directory is `frontend`. The frontend includes its own Next.js API routes. Admin data in those demo routes is currently in memory or mock data, so edits are not durable across Vercel function instances; persistent administration requires a database-backed API.
+The backend imports the versioned model from `Model/` and serves its hybrid rule+ML result. Configure `SECRET_KEY` (at least 32 random characters), `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in the backend environment. CORS must allow the deployed frontend origin. The admin portal has no demo credentials or mock-data routes.
 
 See the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

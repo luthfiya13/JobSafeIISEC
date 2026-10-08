@@ -3,13 +3,13 @@ import os
 class Settings:
     PROJECT_NAME: str = "JOBSAFE"
     API_V1_STR: str = "/api"
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "jobsafe_super_secret_jwt_key_2026_iseec_competition")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day
 
     # Admin Default Account
-    ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "admin@jobsafe.id")
-    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "admin123")
+    ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "")
+    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "")
 
     # Risk Thresholds
     THRESHOLD_LOW_MAX: int = 29

@@ -59,9 +59,6 @@ export default function IndicatorModal({ indicator, onClose }: IndicatorModalPro
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 {indicator.code}
               </span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                Bobot {indicator.weight}%
-              </span>
             </div>
             <h2 className="text-xl font-bold text-slate-900 leading-snug">
               {indicator.name}
@@ -122,9 +119,16 @@ export default function IndicatorModal({ indicator, onClose }: IndicatorModalPro
             Mengapa Perlu Diperhatikan
           </h4>
           <p className="text-sm text-slate-700 leading-relaxed bg-slate-50/60 p-3 rounded-xl border border-slate-100">
-            {indicator.why_important}
+            {indicator.reason || indicator.why_important}
           </p>
         </div>
+
+        {(indicator.legal_basis || indicator.syariah_basis) && (
+          <div className="mb-5 rounded-xl border border-slate-200 p-3.5 space-y-2 text-xs text-slate-600">
+            {indicator.legal_basis && <p><strong>Rujukan hukum:</strong> {indicator.legal_basis}</p>}
+            {indicator.syariah_basis && <p><strong>Catatan syariah:</strong> {indicator.syariah_basis}</p>}
+          </div>
+        )}
 
         {/* Panduan Edukatif */}
         <div className="mb-6 p-3.5 rounded-xl bg-blue-50/70 border border-blue-100 text-xs text-blue-900 leading-relaxed">

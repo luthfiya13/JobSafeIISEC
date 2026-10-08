@@ -12,11 +12,8 @@ import { getAdminSettings, updateAdminSettings } from "@/lib/api";
 
 export default function AdminSettingsPage() {
   const router = useRouter();
-  const [siteName, setSiteName] = useState("JOBSAFE");
-  const [thresholdLow, setThresholdLow] = useState(4);
-  const [thresholdMed, setThresholdMed] = useState(39);
-  const [thresholdHigh, setThresholdHigh] = useState(40);
-  const [engineVersion, setEngineVersion] = useState("v2.6-standard");
+  const [thresholdLow, setThresholdLow] = useState(25);
+  const [thresholdHigh, setThresholdHigh] = useState(60);
   const [maintenance, setMaintenance] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -33,11 +30,8 @@ export default function AdminSettingsPage() {
     const loadSettings = async () => {
       try {
         const data = await getAdminSettings(token);
-        if (data.site_name) setSiteName(data.site_name);
         if (data.threshold_low_max) setThresholdLow(Number(data.threshold_low_max));
-        if (data.threshold_med_max) setThresholdMed(Number(data.threshold_med_max));
         if (data.threshold_high_min) setThresholdHigh(Number(data.threshold_high_min));
-        if (data.analysis_engine_version) setEngineVersion(data.analysis_engine_version);
         if (data.maintenance_mode) setMaintenance(data.maintenance_mode === "true");
       } catch (err) {
         console.error(err);
@@ -56,9 +50,8 @@ export default function AdminSettingsPage() {
 
     try {
       await updateAdminSettings(token, {
-        site_name: siteName,
         threshold_low_max: thresholdLow,
-        threshold_med_max: thresholdMed,
+        threshold_med_max: thresholdHigh - 1,
         threshold_high_min: thresholdHigh,
         maintenance_mode: maintenance,
       });
@@ -95,38 +88,6 @@ export default function AdminSettingsPage() {
         )}
 
         <div className="mt-8 space-y-6">
-          {/* Section 1: Identitas Platform */}
-          <div className="clean-card bg-white p-6 space-y-4">
-            <h3 className="font-bold text-slate-900 text-sm border-b border-slate-100 pb-2">
-              Identitas &amp; Tampilan Platform
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Nama Aplikasi / Website
-                </label>
-                <input
-                  type="text"
-                  value={siteName}
-                  onChange={(e) => setSiteName(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Versi Mesin Analisis
-                </label>
-                <input
-                  type="text"
-                  disabled
-                  value={engineVersion}
-                  className="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-500"
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Section 2: Threshold Kategori Risiko */}
           <div className="clean-card bg-white p-6 space-y-4">
             <div className="border-b border-slate-100 pb-2">
@@ -134,42 +95,35 @@ export default function AdminSettingsPage() {
                 Threshold Kategori Risiko
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Nilai rentang batas penilaian untuk menentukan klasifikasi Rendah, Sedang, atau Tinggi.
+                Perubahan ini diterapkan pada mesin JOBSAFE v3. LOW berarti skor di bawah ambang pertama; HIGH dimulai pada ambang tinggi.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200">
                 <span className="font-bold text-emerald-800 block mb-1">
-                  Batas Maksimal Risiko Rendah
+                  Batas Awal Risiko Sedang (eksklusif untuk LOW)
                 </span>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    min={10}
-                    max={50}
+                    min={1}
+                    max={99}
                     value={thresholdLow}
                     onChange={(e) => setThresholdLow(Number(e.target.value))}
                     className="w-20 p-2 bg-white border border-emerald-300 rounded-lg font-bold text-slate-900 text-center"
                   />
-                  <span className="text-emerald-700 font-semibold">(0 – {thresholdLow})</span>
+                  <span className="text-emerald-700 font-semibold">(0 – {thresholdLow - 1})</span>
                 </div>
               </div>
 
               <div className="p-3.5 rounded-xl bg-amber-50/50 border border-amber-200">
                 <span className="font-bold text-amber-800 block mb-1">
-                  Batas Maksimal Risiko Sedang
+                  Batas Maksimal Risiko Sedang (otomatis)
                 </span>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={thresholdLow + 1}
-                    max={85}
-                    value={thresholdMed}
-                    onChange={(e) => setThresholdMed(Number(e.target.value))}
-                    className="w-20 p-2 bg-white border border-amber-300 rounded-lg font-bold text-slate-900 text-center"
-                  />
-                  <span className="text-amber-700 font-semibold">({thresholdLow + 1} – {thresholdMed})</span>
+                  <span className="w-20 p-2 bg-white border border-amber-300 rounded-lg font-bold text-slate-900 text-center">{thresholdHigh - 1}</span>
+                  <span className="text-amber-700 font-semibold">({thresholdLow} – {thresholdHigh - 1})</span>
                 </div>
               </div>
 
@@ -180,7 +134,7 @@ export default function AdminSettingsPage() {
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    min={thresholdMed + 1}
+                    min={thresholdLow + 1}
                     max={100}
                     value={thresholdHigh}
                     onChange={(e) => setThresholdHigh(Number(e.target.value))}
@@ -192,7 +146,21 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          {/* Section 3: Save Button */}
+          <div className="clean-card bg-white p-5 text-xs text-slate-600">
+            Seluruh permintaan analisis memakai model hybrid v3. Ubah nilai ambang hanya jika perubahan tersebut memang ditetapkan untuk deployment ini; indikator dan bobot model dikelola melalui konfigurasi model, bukan nilai referensi persentase lama.
+          </div>
+
+          <label className="clean-card bg-white p-5 flex items-center gap-3 text-sm font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={maintenance}
+              onChange={(event) => setMaintenance(event.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-blue-600"
+            />
+            Aktifkan mode pemeliharaan untuk endpoint analisis publik
+          </label>
+
+        {/* Section 3: Save Button */}
           <div className="pt-2 flex justify-end">
             <button
               type="button"

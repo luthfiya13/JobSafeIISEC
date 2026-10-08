@@ -78,7 +78,6 @@ export const STATIC_INDICATORS = [
   {
     code: "R1",
     name: "Biaya di Awal",
-    weight: 15,
     category: "Keuangan",
     description: "Permintaan biaya pendaftaran, deposit, pelatihan, materi kerja, atau pembayaran apa pun sebelum resmi bekerja.",
     why_important: "Perusahaan legal menanggung seluruh biaya rekrutmen. Permintaan uang di awal proses lamaran adalah indikator paling umum dari risiko penipuan kerja."
@@ -86,7 +85,6 @@ export const STATIC_INDICATORS = [
   {
     code: "R2",
     name: "Imbalan Tidak Wajar",
-    weight: 10,
     category: "Kompensasi",
     description: "Penawaran penghasilan, komisi, atau gaji harian yang sangat tinggi dan tidak rasional dibandingkan beban kerja atau kualifikasi yang diminta.",
     why_important: "Penawaran gaji fantastis dengan kualifikasi minimal sering dimanfaatkan untuk memikat korban agar tidak berpikir kritis terhadap risiko yang ada."
@@ -94,7 +92,6 @@ export const STATIC_INDICATORS = [
   {
     code: "R3",
     name: "Permintaan Dokumen Sensitif",
-    weight: 15,
     category: "Privasi & Legalitas",
     description: "Permintaan foto KTP, foto selfie dengan KTP, nomor rekening, KK, atau informasi sensitif sebelum ada proses wawancara/seleksi yang sah.",
     why_important: "Data pribadi sensitif seperti foto KTP + selfie sangat rentan disalahgunakan untuk pinjaman online ilegal atau pencurian identitas digital."
@@ -102,7 +99,6 @@ export const STATIC_INDICATORS = [
   {
     code: "R4",
     name: "Identitas Perusahaan Tidak Jelas",
-    weight: 10,
     category: "Profil Perusahaan",
     description: "Identitas perusahaan, alamat kantor fisik, atau kontak resmi tidak jelas, anonim, atau menggunakan email/domain gratisan tanpa domain perusahaan resmi.",
     why_important: "Perusahaan bonafide memiliki legalitas, alamat kantor fisik yang dapat diverifikasi di peta/Kemenkumham, serta saluran email korporat resmi."
@@ -110,7 +106,6 @@ export const STATIC_INDICATORS = [
   {
     code: "R5",
     name: "Deskripsi Pekerjaan Tidak Jelas",
-    weight: 10,
     category: "Uraian Pekerjaan",
     description: "Deskripsi pekerjaan ambigu, serba bisa, tidak terstruktur, tidak menjelaskan KPI, alur kerja, atau tanggung jawab secara spesifik.",
     why_important: "Lowongan profesional merinci kualifikasi, deskripsi tugas pokok, dan kriteria keahlian. Deskripsi yang terlalu samar sering menyembunyikan skema terlarang."
@@ -118,7 +113,6 @@ export const STATIC_INDICATORS = [
   {
     code: "R6",
     name: "Skema Tugas Berantai",
-    weight: 15,
     category: "Modus Operasional",
     description: "Modus pekerjaan berbasis misi berantai seperti like postingan media sosial, subscribe channel, rating e-commerce, atau top-up saldo bertingkat.",
     why_important: "Pelaku biasanya mencairkan komisi kecil di awal lalu meminta top-up deposit besar yang akhirnya tidak dapat ditarik kembali oleh korban."
@@ -126,7 +120,6 @@ export const STATIC_INDICATORS = [
   {
     code: "R7",
     name: "Perjalanan/Akomodasi Wajib",
-    weight: 10,
     category: "Logistik & Travel",
     description: "Panggilan tes seleksi di kota lain dengan kewajiban memesan tiket pesawat, hotel, atau akomodasi melalui biro travel tertentu yang ditunjuk.",
     why_important: "Modus klasik rekrutmen fiktif sering memalsukan surat panggilan resmi, lalu mewajibkan peserta memesan akomodasi lewat agen travel rekanan palsu."
@@ -134,7 +127,6 @@ export const STATIC_INDICATORS = [
   {
     code: "R8",
     name: "Kanal Komunikasi Tidak Resmi",
-    weight: 5,
     category: "Saluran Kontak",
     description: "Seluruh proses seleksi dan komunikasi hanya dilakukan melalui akun pribadi WhatsApp atau Telegram tanpa identitas organisasi yang terverifikasi.",
     why_important: "Aplikasi pesan instan pribadi menyulitkan pelacakan identitas perekrut dan sering dimanfaatkan karena akun dapat dihapus sewaktu-waktu tanpa jejak."
@@ -142,7 +134,6 @@ export const STATIC_INDICATORS = [
   {
     code: "R9",
     name: "Tawaran Kerja Luar Negeri Berisiko",
-    weight: 5,
     category: "Ketenagakerjaan Migran",
     description: "Tawaran pekerjaan di luar negeri tanpa kejelasan izin resmi P3MI, visa kerja resmi, atau verifikasi BP2MI.",
     why_important: "Banyak penipuan kerja luar negeri berujung pada tindak pidana perdagangan orang (TPPO) atau operator online scam di perbatasan dengan visa turis."
@@ -150,7 +141,6 @@ export const STATIC_INDICATORS = [
   {
     code: "R10",
     name: "Urgensi Palsu",
-    weight: 5,
     category: "Teknik Persuasi",
     description: "Penggunaan frasa tekanan batas waktu ekstrim ('kuota terbatas', 'harus transfer dalam 1 jam', 'kesempatan terakhir') untuk memicu kepanikan.",
     why_important: "Tekanan waktu mendesak dirancang oleh penipu untuk mematikan rasionalitas calon korban agar segera mengambil keputusan impulsif sebelum sempat memverifikasi."

@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
                     {stats?.total_analyses || 0}
                   </span>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Semua riwayat pemindaian
+                    Analisis model v3 yang tercatat
                   </p>
                 </div>
               </div>
@@ -229,7 +229,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-                  Data diperbarui otomatis dari log analisis publik.
+                  Statistik hanya menghitung hasil model v3; teks lowongan tidak disimpan.
                 </div>
               </div>
 
@@ -296,7 +296,7 @@ export default function AdminDashboardPage() {
                     Analisis Terbaru
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    5 riwayat pemindaian terakhir yang masuk ke dalam sistem
+                    5 hasil model v3 terbaru
                   </p>
                 </div>
                 <Link
