@@ -127,6 +127,22 @@ npm run dev
 ```
 Buka browser di: `http://localhost:3000`.
 
+### Analisis konteks LLM (opsional)
+
+Backend dapat memakai LLM OpenAI-compatible untuk memahami konteks kalimat, negasi, hubungan antarbagian lowongan, dan sinyal yang tidak tertangkap aturan kata kunci. Fitur ini melengkapi model dan rule engine; kutipan dari LLM divalidasi harus benar-benar muncul di teks sebelum dipakai. Tanpa konfigurasi atau jika layanan gagal, analisis beralih otomatis ke engine lokal.
+
+Atur environment berikut pada backend untuk mengaktifkannya:
+
+```bash
+OPENAI_API_KEY=...
+JOBSAFE_LLM_MODEL=gpt-4o-mini
+# Opsional untuk penyedia yang kompatibel dengan Chat Completions
+JOBSAFE_LLM_BASE_URL=https://api.openai.com/v1
+JOBSAFE_LLM_TIMEOUT=12
+```
+
+Saat diaktifkan, teks lowongan akan dikirim ke penyedia LLM yang dikonfigurasi. Beri tahu pengguna melalui kebijakan privasi/antarmuka sebelum mengaktifkan integrasi di deployment publik, dan tinjau kebijakan retensi penyedia. Endpoint tidak menyimpan teks prompt LLM; metadata hasil hanya mencatat apakah analisis konteks digunakan dan jumlah temuan.
+
 Frontend meneruskan seluruh request API ke FastAPI melalui route server-side. Untuk deployment, set
 `BACKEND_API_URL` ke URL backend yang berakhiran `/api` (contoh: `https://api.example.com/api`).
 Backend membutuhkan dependensi engine hybrid dari `backend/requirements.txt`; jika paket ML belum tersedia,

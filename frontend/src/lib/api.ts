@@ -36,6 +36,12 @@ export interface AnalysisResult {
   indicators: IndicatorItem[];
   verification_steps: VerificationStep[];
   disclaimer: string;
+  model?: {
+    context_llm_enabled?: boolean;
+    context_llm_used?: boolean;
+    context_llm_model?: string | null;
+    context_llm_findings?: number;
+  };
   raw_input?: string;
   input_type?: "text" | "photo" | "link";
   extracted_text?: string;

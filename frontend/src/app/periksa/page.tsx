@@ -220,6 +220,9 @@ export default function PeriksaPage() {
               <p className="text-slate-600 text-sm sm:text-base">
                 Masukkan informasi lowongan yang ingin Anda periksa. Pilih metode input teks, foto screenshot, atau tautan.
               </p>
+              <p className="text-slate-500 text-xs sm:text-sm">
+                Teks lowongan dapat diproses oleh layanan AI eksternal jika fitur analisis konteks diaktifkan oleh pengelola.
+              </p>
             </div>
 
             {/* Main Input Card with 3 Tabs */}
