@@ -77,6 +77,16 @@ def init_db():
     );
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        analysis_id INTEGER,
+        listing_text TEXT NOT NULL,
+        complaint TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    );
+    """)
+
     # Seed Default Admin if not exists
     cursor.execute("SELECT id FROM admin_users WHERE email = ?", (settings.ADMIN_EMAIL,))
     if not cursor.fetchone():
@@ -259,3 +269,15 @@ def save_analysis_record(input_type: str, input_preview: str, risk_score: int, r
     rec_id = cursor.lastrowid
     conn.close()
     return rec_id
+
+def save_report(analysis_id: Optional[int], listing_text: str, complaint: str) -> int:
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO user_reports (analysis_id, listing_text, complaint, created_at) VALUES (?, ?, ?, ?)",
+        (analysis_id, listing_text, complaint, datetime.now().isoformat()),
+    )
+    conn.commit()
+    report_id = cursor.lastrowid
+    conn.close()
+    return report_id

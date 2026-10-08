@@ -4,6 +4,7 @@ from app.config import settings
 from app.database.db import init_db, get_all_indicators
 from app.api.analyze import router as analyze_router
 from app.api.admin import router as admin_router
+from app.api.reports import router as reports_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -56,6 +57,7 @@ def get_public_indicators():
 # Include routers
 app.include_router(analyze_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
+app.include_router(reports_router, prefix=settings.API_V1_STR)
 
 if __name__ == "__main__":
     import uvicorn

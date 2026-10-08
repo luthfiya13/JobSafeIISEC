@@ -163,6 +163,29 @@ def list_analyses(
 
     return {"items": items, "count": len(items)}
 
+@router.get("/reports")
+def list_reports(current_admin: dict = Depends(get_current_admin)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, analysis_id, listing_text, complaint, created_at FROM user_reports ORDER BY id DESC"
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return {
+        "items": [
+            {
+                "id": row["id"],
+                "analysis_id": row["analysis_id"],
+                "listing_preview": row["listing_text"],
+                "complaint": row["complaint"],
+                "created_at": row["created_at"],
+            }
+            for row in rows
+        ],
+        "count": len(rows),
+    }
+
 @router.get("/analyses/{id}")
 def get_analysis_detail(id: int, current_admin: dict = Depends(get_current_admin)):
     conn = get_db()

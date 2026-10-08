@@ -7,10 +7,11 @@ interface RiskGaugeProps {
   score: number; // 0 to 100
   level: string; // "RISIKO RENDAH", "RISIKO SEDANG", "RISIKO TINGGI"
   color: "green" | "amber" | "red";
+  thresholds?: { low_max: number; high_min: number };
   size?: number;
 }
 
-export default function RiskGauge({ score, level, color, size = 260 }: RiskGaugeProps) {
+export default function RiskGauge({ score, level, color, thresholds, size = 260 }: RiskGaugeProps) {
   const [animatedScore, setAnimatedScore] = useState(0);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
       bgBadge: "bg-emerald-50 border-emerald-200 text-emerald-800",
       glow: "rgba(22, 163, 74, 0.15)",
       icon: ShieldCheck,
-      rangeText: "🟢 Skor 0–24: risiko rendah; tidak berarti aman mutlak"
+      rangeText: `🟢 Skor 0–${thresholds?.low_max ?? 24}: risiko rendah; tidak berarti aman mutlak`
     },
     amber: {
       stroke: "#f59e0b",
@@ -38,7 +39,7 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
       bgBadge: "bg-amber-50 border-amber-200 text-amber-800",
       glow: "rgba(245, 158, 11, 0.15)",
       icon: AlertTriangle,
-      rangeText: "🟡 Skor 25–59: perlu klarifikasi dan verifikasi"
+      rangeText: `🟡 Skor ${(thresholds?.low_max ?? 24) + 1}–${(thresholds?.high_min ?? 60) - 1}: perlu klarifikasi dan verifikasi`
     },
     red: {
       stroke: "#dc2626",
@@ -47,7 +48,7 @@ export default function RiskGauge({ score, level, color, size = 260 }: RiskGauge
       bgBadge: "bg-red-50 border-red-200 text-red-800",
       glow: "rgba(220, 38, 38, 0.18)",
       icon: AlertOctagon,
-      rangeText: "🔴 Skor 60–100: risiko tinggi; verifikasi sebelum melanjutkan"
+      rangeText: `🔴 Skor ${thresholds?.high_min ?? 60}–100: risiko tinggi; verifikasi sebelum melanjutkan`
     }
   };
 

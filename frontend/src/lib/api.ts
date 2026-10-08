@@ -10,6 +10,9 @@ export interface IndicatorItem {
   status_badge: "safe" | "attention" | "high";
   description: string;
   why_important: string;
+  reason?: string | null;
+  legal_basis?: string | null;
+  syariah_basis?: string | null;
   matches_count?: number;
   evidence?: string | null;
 }
@@ -22,11 +25,11 @@ export interface VerificationStep {
 
 export interface AnalysisResult {
   id?: number;
-  risk_score: number;
-  risk_level: "RISIKO RENDAH" | "RISIKO SEDANG" | "RISIKO TINGGI";
-  risk_color: "green" | "amber" | "red";
+  risk_score: number | null;
+  risk_level: "RISIKO RENDAH" | "RISIKO SEDANG" | "RISIKO TINGGI" | "INSUFFICIENT_INPUT";
+  risk_color: "green" | "amber" | "red" | "gray";
   risk_theme: string;
-  level_code: "LOW" | "MEDIUM" | "HIGH";
+  level_code: "LOW" | "MEDIUM" | "HIGH" | "INSUFFICIENT_INPUT";
   summary: string;
   findings_summary?: string;
   preventive_advice?: string;
@@ -42,6 +45,8 @@ export interface AnalysisResult {
     context_llm_model?: string | null;
     context_llm_findings?: number;
   };
+  model_meta?: { engine_version?: string; ml_enabled?: boolean; [key: string]: unknown };
+  risk_thresholds?: { low_max: number; high_min: number };
   raw_input?: string;
   input_type?: "text" | "photo" | "link";
   extracted_text?: string;
@@ -99,6 +104,14 @@ export interface PublicIndicator {
   weight: number;
   description: string;
   why_important: string;
+}
+
+export interface AdminReportRecord {
+  id: number;
+  analysis_id: number | null;
+  listing_preview: string;
+  complaint: string;
+  created_at: string;
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
@@ -559,5 +572,28 @@ export async function updateAdminSettings(token: string, data: Partial<AdminSett
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Gagal menyimpan pengaturan.");
+  return res.json();
+}
+
+export async function submitReport(report: {
+  analysis_id?: number;
+  listing_text: string;
+  complaint: string;
+}) {
+  const res = await fetch(`${API_BASE}/reports`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(report),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || "Aduan gagal disimpan.");
+  return data as { success: boolean; report_id: number; message: string };
+}
+
+export async function getAdminReports(token: string): Promise<{ items: AdminReportRecord[]; count: number }> {
+  const res = await fetch(`${API_BASE}/admin/reports`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Gagal memuat aduan.");
   return res.json();
 }
