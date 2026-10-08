@@ -1,3 +1,5 @@
+import { analyzeJobText } from "./analyzer";
+
 export interface IndicatorItem {
   code: string;
   name: string;
@@ -96,11 +98,24 @@ export interface PublicIndicator {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export async function analyzeText(text: string): Promise<AnalysisResult> {
-  const res = await fetch(`${API_BASE}/analyze/text`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/analyze/text`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+  } catch {
+    // Keep text analysis usable when the optional FastAPI service is offline.
+    return analyzeJobText(text);
+  }
+
+  if (res.status === 503) {
+    // The Next.js proxy returns 503 when FastAPI is not running. The browser
+    // engine uses the same indicator contract and lets the user still see a
+    // report instead of getting stuck after the progress animation.
+    return analyzeJobText(text);
+  }
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
