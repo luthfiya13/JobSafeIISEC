@@ -16,7 +16,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     pwd_bytes = plain_password[:72].encode("utf-8")
     return bcrypt.checkpw(pwd_bytes, hashed_password.encode("utf-8"))
 
-DB_PATH = "jobsafe.db"
+DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "jobsafe.db"))
 
 def get_db():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -121,23 +121,26 @@ def init_db():
     # Seed default system settings
     default_settings = {
         "site_name": "JOBSAFE",
-        "threshold_low_max": "4",
-        "threshold_med_max": "39",
-        "threshold_high_min": "40",
-        "analysis_engine_version": "v2.6-standard",
+        "threshold_low_max": "25",
+        "threshold_med_max": "59",
+        "threshold_high_min": "60",
+        "analysis_engine_version": "v3.0-hybrid",
         "maintenance_mode": "false"
     }
     for k, v in default_settings.items():
         cursor.execute("INSERT OR IGNORE INTO system_settings (key, value) VALUES (?, ?)", (k, v))
     for key, old_value, new_value in (
-        ("threshold_low_max", "29", "4"),
-        ("threshold_med_max", "69", "39"),
-        ("threshold_high_min", "70", "40"),
+        ("threshold_low_max", "29", "25"),
+        ("threshold_med_max", "69", "59"),
+        ("threshold_high_min", "70", "60"),
     ):
         cursor.execute(
             "UPDATE system_settings SET value = ? WHERE key = ? AND value = ?",
             (new_value, key, old_value)
         )
+    cursor.execute(
+        "UPDATE system_settings SET value = 'v3.0-hybrid' WHERE key = 'analysis_engine_version' AND value = 'v2.6-standard'"
+    )
 
     # Pre-populate sample realistic analyses if history is empty (for rich prototype admin dashboard experience)
     cursor.execute("SELECT COUNT(*) as cnt FROM analysis_history")

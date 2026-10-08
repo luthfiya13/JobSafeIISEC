@@ -8,7 +8,8 @@ from .text_utils import (normalize_text, split_sentences, extract_entities, doma
 from .verification import VerificationLayer
 
 INDICATORS = [f"R{i}" for i in range(1, 11)]
-BASE_DIR = Path(__file__).resolve().parents[1]
+# Repository-level Model directory (this file lives in Model/src/jobsafe/jobsafe).
+BASE_DIR = Path(__file__).resolve().parents[3]
 OFFICIAL = json.loads((BASE_DIR / "config/official_domains.json").read_text(encoding="utf-8"))
 F = re.I | re.S
 

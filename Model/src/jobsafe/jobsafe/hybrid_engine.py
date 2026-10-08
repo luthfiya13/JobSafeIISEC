@@ -6,7 +6,7 @@ from .engine import JobsafeEngine, DISCLAIMER_ID, LEVEL_MSG
 from .ml_model import JobsafeMLModel, CLASSES
 from .text_utils import normalize_text
 
-BASE_DIR = Path(__file__).resolve().parents[1]
+BASE_DIR = Path(__file__).resolve().parents[3]
 
 class JobsafeHybridEngine:
     """

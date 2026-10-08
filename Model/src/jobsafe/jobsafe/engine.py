@@ -38,7 +38,7 @@ class JobsafeEngine:
     Rule-first, context-aware, ordinal recruitment risk evaluation.
     """
     def __init__(self, config_path: Optional[str] = None, official_config_path: Optional[str] = None):
-        p = Path(config_path) if config_path else Path(__file__).resolve().parents[1] / "config/jobsafe_config.json"
+        p = Path(config_path) if config_path else Path(__file__).resolve().parents[3] / "config/jobsafe_config.json"
         self.config = json.loads(p.read_text(encoding="utf-8"))
         self.low_max = self.config["thresholds_bootstrap"]["low_max"]
         self.high_min = self.config["thresholds_bootstrap"]["high_min"]

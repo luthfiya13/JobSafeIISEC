@@ -135,10 +135,12 @@ export async function analyzePhoto(file: File, fallbackText?: string): Promise<A
     throw new Error("Teks dari foto belum terbaca dengan jelas. Coba foto yang lebih tajam, lurus, dan memiliki kontras yang baik.");
   }
 
+  const formData = new FormData();
+  formData.append("file", file, file.name);
+  formData.append("fallback_text", extractedText);
   const res = await fetch(`${API_BASE}/analyze/photo`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: extractedText, file_name: file.name }),
+    body: formData,
   });
 
   if (!res.ok) {

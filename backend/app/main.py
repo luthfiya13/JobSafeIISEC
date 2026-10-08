@@ -33,6 +33,10 @@ def root():
         "description": "Platform Penilaian Risiko Lowongan Kerja Digital"
     }
 
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "jobsafe-api"}
+
 @app.get("/api/public-indicators")
 def get_public_indicators():
     """Public indicator reference for visitor landing/info page"""

@@ -194,7 +194,7 @@ def get_indicators_list(current_admin: dict = Depends(get_current_admin)):
     return {
         "indicators": indicators,
         "total_weight": total_weight,
-        "is_valid_total": total_weight == 105
+        "is_valid_total": total_weight == 100
     }
 
 @router.put("/indicators/{code}")
@@ -219,7 +219,7 @@ def update_indicator_config(
         "success": True,
         "message": f"Indikator {code} berhasil diperbarui.",
         "total_weight": total_weight,
-        "is_valid_total": total_weight == 105
+        "is_valid_total": total_weight == 100
     }
 
 @router.get("/settings")

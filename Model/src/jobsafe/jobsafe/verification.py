@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from .text_utils import domain_from_url, SHORTENERS, EMAIL_RE
 
-BASE_DIR = Path(__file__).resolve().parents[1]
+BASE_DIR = Path(__file__).resolve().parents[3]
 
 class VerificationLayer:
     """

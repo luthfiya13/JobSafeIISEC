@@ -51,7 +51,7 @@ export default function AdminIndicatorsPage() {
     return acc + (curr.is_active ? Number(curr.weight) : 0);
   }, 0);
 
-  const isWeightValid = totalWeight === 105;
+  const isWeightValid = totalWeight === 100;
 
   const handleStartEdit = (ind: AdminIndicator) => {
     setEditingItem(ind);
@@ -126,13 +126,13 @@ export default function AdminIndicatorsPage() {
           </div>
         </div>
 
-        {/* Warn when active weights differ from the paper's 105% distribution. */}
+        {/* Warn when active weights do not form a complete 100% distribution. */}
         {!isWeightValid && (
           <div className="mt-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">Peringatan: Total bobot saat ini tidak sama dengan 105% sesuai naskah ({totalWeight}%).</p>
-              <p className="mt-0.5 text-red-700">Distribusi bobot pada naskah berjumlah 105%. Bobot Hard Flag memicu bypass ke skor 100%, sedangkan bobot Soft Flag dijumlahkan untuk klasifikasi risiko.</p>
+              <p className="font-bold">Peringatan: Total bobot aktif harus 100% ({totalWeight}% saat ini).</p>
+              <p className="mt-0.5 text-red-700">Bobot hard flag tetap dapat memicu eskalasi ke skor 100%, sedangkan bobot indikator lain digunakan dalam perhitungan risiko.</p>
             </div>
           </div>
         )}

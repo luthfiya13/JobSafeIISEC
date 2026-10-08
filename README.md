@@ -126,3 +126,8 @@ npm install
 npm run dev
 ```
 Buka browser di: `http://localhost:3000`.
+
+Frontend meneruskan seluruh request API ke FastAPI melalui route server-side. Untuk deployment, set
+`BACKEND_API_URL` ke URL backend yang berakhiran `/api` (contoh: `https://api.example.com/api`).
+Backend membutuhkan dependensi engine hybrid dari `backend/requirements.txt`; jika paket ML belum tersedia,
+API tetap berjalan dengan rule engine kompatibilitas dan melaporkan mode fallback pada metadata hasil.
