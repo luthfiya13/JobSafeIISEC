@@ -47,16 +47,22 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     description: "Penawaran penghasilan, komisi, atau gaji harian yang sangat tinggi dan tidak rasional dibandingkan beban kerja atau kualifikasi yang diminta.",
     why_important: "Penawaran gaji fantastis dengan kualifikasi minimal (tanpa pengalaman/hanya perlu HP) sering dimanfaatkan untuk memikat korban agar tidak berpikir kritis terhadap risiko yang ada.",
     keywords: [
-      "gaji 500rb per hari", "gaji 1jt per hari", "500.000 per hari", "1.000.000/hari", "penghasilan harian",
-      "cukup punya hp", "cuma like", "hanya modal hp", "profit instan", "komisi instan", "cuan cepat",
-      "penghasilan tak terbatas", "hanya 15 menit", "kerja santai gaji jutaan", "penghasilan 5-10 juta/minggu"
+      "gaji 100 juta", "100 juta", "50 juta", "gaji 500rb per hari", "gaji 1jt per hari", "500.000 per hari",
+      "1.000.000/hari", "penghasilan harian", "cukup punya hp", "cuma like", "hanya modal hp", "profit instan",
+      "komisi instan", "cuan cepat", "penghasilan tak terbatas", "hanya 15 menit", "kerja santai gaji jutaan",
+      "penghasilan 5-10 juta/minggu", "kerja 5 jam", "kerja 2 jam", "hanya 3 jam"
     ],
     patterns: [
+      /(?:gaji|penghasilan|salary|upah|komisi|pendapatan|fee|dibayar|cair)[^.!?\n]{0,30}(?:rp\.?\s*)?(?:[1-9]\d{1,2}|\d{3,})\s*(?:juta|jt|\.000\.000)/i,
+      /(?:rp\.?\s*)?(?:[2-9]\d|[1-9]\d{2,})\s*(?:juta|jt)\b/i,
+      /(?:kerja|waktu\s*kerja)[^.!?\n]{0,25}(?:hanya|cuma|cukup)?\s*[1-5]\s*jam/i,
+      /(?:gaji|penghasilan|dapat|komisi)[^.!?\n]{0,50}(?:rp\.?\s*)?(?:\d+[\d.,]*\s*(?:juta|jt|rb|ribu)|\d{6,})[^.!?\n]{0,50}(?:kerja\s*)?(?:hanya|cuma|cukup)?\s*\d+\s*(?:jam|menit)/i,
+      /(?:kerja|waktu)\s*(?:hanya|cuma|cukup)?\s*\d+(?:-\d+)?\s*(?:jam|menit)[^.!?\n]{0,50}(?:gaji|penghasilan|dapat|komisi|dibayar)[^.!?\n]{0,50}(?:rp\.?\s*)?(?:\d+[\d.,]*\s*(?:juta|jt|rb|ribu)|\d{6,})/i,
       /(?:gaji|penghasilan|salary)[^.!?\n]{0,35}(?:usd\s*)?\$?\s*(?:1[5-9]\d{2}|[2-9]\d{3,}|[1-9]\.\d{3})\s*(?:per\s*bulan|\/\s*bulan|monthly)[^.!?\n]{0,500}(?:tanpa\s*(?:minimal\s*)?pengalaman|tanpa\s*syarat|hanya\s*(?:perlu|modal)|cukup\s*(?:bisa|mahir)|admin\s*typing)/i,
-      /(?:\$\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})|usd\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})|rp\.?\s*(?:1[5-9]|[2-9]\d)\s*(?:juta|jt))[^.!?\n]{0,700}(?:tanpa\s*(?:minimal\s*)?pengalaman|tanpa\s*syarat|ada\s*pelatihan|admin\s*typing)/i,
-      /(?:penghasilan|gaji|komisi|upah)\s*(?:rp\s*)?(?:[3-9]\d{2}\.?\d{3}|[1-9]\.?\d{6})\s*(?:per\s*hari|\/hari|harian|tiap\s*hari)/i,
-      /(?:kerja|tugas)\s*(?:santai|mudah|ringan)\s*(?:gaji|penghasilan|dapat)\s*(?:jutaan|besar|melimpah)/i,
-      /(?:hanya|cukup)\s*(?:modal\s*hp|punya\s*hp|rebahan|like\s*video)\s*(?:dapat|menghasilkan|hasilkan)\s*(?:rp|juta|\d+)/i,
+      /(?:\$\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})|usd\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})|rp\.?\s*(?:1[5-9]|[2-9]\d|\d{3,})\s*(?:juta|jt))[^.!?\n]{0,700}(?:tanpa\s*(?:minimal\s*)?pengalaman|tanpa\s*syarat|ada\s*pelatihan|admin\s*typing)/i,
+      /(?:penghasilan|gaji|komisi|upah)\s*(?:rp\s*)?(?:[2-9]\d{2}\.?\d{3}|[1-9]\.?\d{6}|\d+\s*(?:rb|ribu|juta|jt))\s*(?:per\s*hari|\/hari|harian|tiap\s*hari|per\s*minggu|\/minggu)/i,
+      /(?:kerja|tugas)\s*(?:santai|mudah|ringan|fleksibel|dari\s*rumah)[^.!?\n]{0,35}(?:gaji|penghasilan|dapat)\s*(?:jutaan|besar|melimpah|\d+\s*(?:juta|jt))/i,
+      /(?:hanya|cukup)\s*(?:modal\s*hp|punya\s*hp|rebahan|like\s*video|baca\s*berita|copy\s*paste)\s*(?:dapat|menghasilkan|hasilkan)\s*(?:rp|juta|\d+)/i,
       /(?:profit|keuntungan)\s*(?:harian|langsung|cair\s*tiap\s*hari|instan)\s*(?:rp|\d+)/i
     ]
   },
@@ -114,8 +120,9 @@ export const DEFAULT_INDICATORS: IndicatorConfig[] = [
     ],
     patterns: [
       /(?:pekerjaan|tugas)\s*(?:sangat\s*mudah|hanya\s*ikuti\s*instruksi|cukup\s*salin\s*tempel|cuma\s*copy\s*paste)/i,
-      /(?:tanpa\s*syarat|tanpa\s*keahlian|tidak\s*perlu\s*skill|semua\s*bisa\s*diterima)/i,
-      /(?:deskripsi\s*kerja|jobdesk)\s*(?:fleksibel|bebas|apa\s*saja|santai)/i
+      /(?:tanpa\s*syarat|tanpa\s*keahlian|tidak\s*perlu\s*skill|semua\s*bisa\s*diterima|siapa\s*saja\s*bisa)/i,
+      /(?:deskripsi\s*kerja|jobdesk)\s*(?:fleksibel|bebas|apa\s*saja|santai)/i,
+      /(?:hanya|cuma)?\s*(?:kerja|tugas)\s*[1-5]\s*jam(?!\s*(?:lembur|shift\s*malam))/i
     ]
   },
   {
@@ -272,13 +279,76 @@ export const VERIFICATION_STEPS = [
   }
 ];
 
+export function normalizeRecruitmentText(rawText: string): string {
+  let text = (rawText || "").normalize("NFKC").replace(/\u200B/g, "").replace(/\r/g, "\n");
+
+  // 1. Repair OCR spaced-out letters inside critical keywords
+  text = text
+    .replace(/\bg\s+a\s+j\s+i\b/gi, "gaji")
+    .replace(/\bb\s+i\s+a\s+y\s+a\b/gi, "biaya")
+    .replace(/\bk\s+e\s+r\s+j\s+a\b/gi, "kerja")
+    .replace(/\bj\s+u\s+t\s+a\b/gi, "juta")
+    .replace(/\br\s+i\s+b\s+u\b/gi, "ribu")
+    .replace(/\bp\s+e\s+n\s+d\s+a\s+f\s+t\s+a\s+r\s+a\s+n\b/gi, "pendaftaran")
+    .replace(/\br\s+e\s+k\s+e\s+n\s+i\s+n\s+g\b/gi, "rekening")
+    .replace(/\bd\s+e\s+p\s+o\s+s\s+i\s+t\b/gi, "deposit")
+    .replace(/\bw\s+h\s+a\s+t\s+s\s+a\s+p\s+p\b/gi, "whatsapp")
+    .replace(/\bw\s*[\.\/]\s*a\b/gi, "whatsapp")
+    .replace(/\bt\s+e\s+l\s+e\s+g\s+r\s+a\s+m\b/gi, "telegram")
+    .replace(/\bk\s*[\.\/]?\s*t\s*[\.\/]?\s*p\b/gi, "ktp");
+
+  // 2. Separate numbers and attached units (e.g. '100juta' -> '100 juta', '5jam' -> '5 jam')
+  text = text
+    .replace(/(\d+)\s*(juta|jt|jta|jeti)/gi, "$1 juta")
+    .replace(/(\d+)\s*(ribu|rb|k)\b/gi, "$1 ribu")
+    .replace(/(\d+)\s*(jam|jm)\b/gi, "$1 jam")
+    .replace(/(\d+)\s*(menit|mnt)\b/gi, "$1 menit")
+    .replace(/(rp|idr)\.?\s*(\d+)/gi, "rp $2");
+
+  // 3. Fix OCR Leetspeak / typo substitutions in words
+  const fixWordLeetspeak = (w: string) => {
+    if (/^(?:s[1-3]|d[1-4]|r\d{1,2}|jl|no)$/i.test(w)) return w;
+    let s = w;
+    s = s.replace(/([a-z])0([a-z])/gi, "$1o$2").replace(/0([a-z]{2,})/gi, "o$1").replace(/([a-z]{2,})0/gi, "$1o");
+    s = s.replace(/([a-z])4([a-z])/gi, "$1a$2").replace(/4([a-z]{2,})/gi, "a$1").replace(/([a-z]{2,})4/gi, "$1a");
+    s = s.replace(/([a-z])3([a-z])/gi, "$1e$2").replace(/3([a-z]{2,})/gi, "e$1").replace(/([a-z]{2,})3/gi, "$1e");
+    s = s.replace(/([a-z])1([a-z])/gi, "$1i$2").replace(/1([a-z]{2,})/gi, "i$1").replace(/([a-z]{2,})1/gi, "$1i");
+    s = s.replace(/([a-z])5([a-z])/gi, "$1s$2").replace(/5([a-z]{2,})/gi, "s$1");
+    return s;
+  };
+
+  const words = text.split(/(\s+|[^\w\s])/);
+  const normalizedWords = words.map(w => {
+    if (/[a-zA-Z]/.test(w) && /\d/.test(w) && w.length >= 3) {
+      return fixWordLeetspeak(w);
+    }
+    return w;
+  });
+  text = normalizedWords.join("");
+
+  // 4. Common abbreviations and OCR typos
+  text = text
+    .replace(/\b(?:jta|jeti|jeti2)\b/gi, "juta")
+    .replace(/\b(?:blaya|b1aya)\b/gi, "biaya")
+    .replace(/\b(?:pndftrn|pendftran)\b/gi, "pendaftaran")
+    .replace(/\b(?:watsap|wh4tsapp|wasap)\b/gi, "whatsapp")
+    .replace(/\b(?:telegrm|t3legram)\b/gi, "telegram")
+    .replace(/\b(?:rekk?)\b/gi, "rekening");
+
+  return text.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 export function analyzeJobText(text: string) {
   const cleaned = text.trim();
   if (cleaned.length < 15) {
     throw new Error("Teks lowongan terlalu pendek. Masukkan minimal 15 karakter untuk analisis.");
   }
 
-  const lower = cleaned.toLowerCase();
+  // Preprocess text to repair OCR artifacts and typos
+  const normalized = normalizeRecruitmentText(cleaned);
+  const lowerCleaned = cleaned.toLowerCase();
+  const lowerNormalized = normalized.toLowerCase();
+
   let totalScore = 0;
   let criticalFloor = 0;
   let combinedRiskProbability = 0;
@@ -286,56 +356,87 @@ export function analyzeJobText(text: string) {
   let attentionCount = 0;
   const detectedNames: string[] = [];
 
+  // Reusable checks for cross-indicator context
+  const hasExtremeSalary = /(?:gaji|penghasilan|salary|komisi|upah)[^.!?\n]{0,25}(?:rp\.?\s*)?(?:[1-9]\d{1,2}|\d{3,})\s*(?:juta|jt|\.000\.000)/i.test(normalized)
+    || /(?:rp\.?\s*)?(?:[2-9]\d|[1-9]\d{2,})\s*(?:juta|jt)\b/i.test(normalized);
+  const hasShortHours = /(?:kerja|waktu\s*kerja)\s*(?:hanya|cuma|cukup)?\s*[1-5]\s*jam/i.test(normalized)
+    || /(?:hanya|cuma|cukup)\s*(?:luangkan\s*waktu\s*)?[1-5]\s*jam/i.test(normalized);
+
   const detectedIndicators = DEFAULT_INDICATORS.map((ind) => {
     const matches: string[] = [];
     let evidence: string | null = null;
 
-    // Check regex
-    for (const pattern of ind.patterns) {
-      const match = pattern.exec(cleaned);
-      if (match) {
-        const contextBefore = cleaned.slice(Math.max(0, match.index - 42), match.index);
-        if (/\b(?:tidak|tanpa|bebas|dilarang|jangan)\b[^.!?\n]{0,42}$/i.test(contextBefore)) {
-          continue;
-        }
-        matches.push(match[0]);
-        if (!evidence) {
-          const start = Math.max(0, match.index - 50);
-          const end = Math.min(cleaned.length, match.index + match[0].length + 50);
-          const snippet = cleaned.substring(start, end).replace(/\s+/g, " ").trim();
-          evidence = `...${snippet}...`;
+    // Helper to evaluate patterns against text
+    const checkTextWithPatterns = (targetText: string) => {
+      for (const pattern of ind.patterns) {
+        const match = pattern.exec(targetText);
+        if (match) {
+          const contextBefore = targetText.slice(Math.max(0, match.index - 42), match.index);
+          if (/\b(?:tidak|tanpa|bebas|dilarang|jangan)\b[^.!?\n]{0,42}$/i.test(contextBefore)) {
+            continue;
+          }
+          matches.push(match[0]);
+          if (!evidence) {
+            const start = Math.max(0, match.index - 50);
+            const end = Math.min(targetText.length, match.index + match[0].length + 50);
+            const snippet = targetText.substring(start, end).replace(/\s+/g, " ").trim();
+            evidence = `...${snippet}...`;
+          }
         }
       }
+    };
+
+    // Check regex on both cleaned original and repaired normalized text
+    checkTextWithPatterns(cleaned);
+    if (matches.length === 0 && normalized !== cleaned) {
+      checkTextWithPatterns(normalized);
     }
 
     // Check keywords if no regex matches
     if (matches.length === 0) {
       for (const kw of ind.keywords) {
-        const idx = lower.indexOf(kw.toLowerCase());
+        const idxClean = lowerCleaned.indexOf(kw.toLowerCase());
+        const idxNorm = lowerNormalized.indexOf(kw.toLowerCase());
+        const targetText = idxClean !== -1 ? cleaned : normalized;
+        const targetLower = idxClean !== -1 ? lowerCleaned : lowerNormalized;
+        const idx = idxClean !== -1 ? idxClean : idxNorm;
+
         if (idx !== -1) {
-          const contextBefore = cleaned.slice(Math.max(0, idx - 42), idx);
+          const contextBefore = targetText.slice(Math.max(0, idx - 42), idx);
           if (/\b(?:tidak|tanpa|bebas|dilarang|jangan)\b[^.!?\n]{0,42}$/i.test(contextBefore)) {
             continue;
           }
           matches.push(kw);
           if (!evidence) {
             const start = Math.max(0, idx - 50);
-            const end = Math.min(cleaned.length, idx + kw.length + 50);
-            const snippet = cleaned.substring(start, end).replace(/\s+/g, " ").trim();
+            const end = Math.min(targetText.length, idx + kw.length + 50);
+            const snippet = targetText.substring(start, end).replace(/\s+/g, " ").trim();
             evidence = `...${snippet}...`;
           }
         }
       }
     }
 
-    // OCR often splits salary and qualification across distant poster blocks.
-    // Treat their co-occurrence as one contextual R2 finding instead of
-    // requiring a fragile phrase to appear on the same line.
-    if (ind.code === "R2" && matches.length === 0
-      && /(?:\$\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})|usd\s*(?:[1-9]\d{3,}|[1-9]\.\d{3})|rp\.?\s*(?:1[5-9]|[2-9]\d)\s*(?:juta|jt))/i.test(cleaned)
-      && /(?:tanpa\s*(?:minimal\s*)?pengalaman|tanpa\s*syarat|tanpa\s*kualifikasi|ada\s*pelatihan|admin\s*typing)/i.test(cleaned)) {
-      matches.push("gaji tinggi + kualifikasi/pengalaman minimal");
-      evidence = "Gaji tinggi dikombinasikan dengan syarat pengalaman/kualifikasi yang rendah.";
+    // Contextual co-occurrence for R2 (Imbalan Tidak Wajar)
+    if (ind.code === "R2" && matches.length === 0) {
+      if (hasExtremeSalary && hasShortHours) {
+        matches.push("Gaji fantastis + jam kerja sangat singkat");
+        evidence = "Penawaran gaji sangat tinggi dikombinasikan dengan jam kerja hanya beberapa jam (beban kerja tidak sebanding).";
+      } else if (hasExtremeSalary) {
+        matches.push("Gaji nominal fantastis di luar batas wajar");
+        evidence = "Tawaran nominal penghasilan sangat tinggi yang tidak lazim untuk perekrutan digital tanpa proses seleksi resmi.";
+      } else if (hasShortHours && /(?:juta|jt|ribu|rb|dapat|gaji|biaya|komisi)/i.test(normalized)) {
+        matches.push("Jam kerja sangat singkat dengan imbalan tidak proporsional");
+        evidence = "Beban kerja sangat minim (hanya beberapa jam) dengan janji imbalan yang mencurigakan.";
+      }
+    }
+
+    // Contextual co-occurrence for R5 (Deskripsi Pekerjaan Tidak Jelas)
+    if (ind.code === "R5" && matches.length === 0) {
+      if (hasShortHours && !/(?:posisi|staf|staff|operator|manager|supervisor|engineer|guru|dokter|sales|kurir|driver|waiter|kasir)/i.test(normalized)) {
+        matches.push("Jam kerja tanpa kejelasan posisi atau uraian tugas");
+        evidence = "Hanya mencantumkan jam kerja singkat tanpa kejelasan nama jabatan, kualifikasi, atau deskripsi tugas resmi.";
+      }
     }
 
     const weight = ind.weight;
@@ -345,22 +446,24 @@ export function analyzeJobText(text: string) {
     let scoreContrib = 0;
 
     const hardFlagEvidence = ind.code === "R1"
-      ? /(?:wajib|harus|diminta)\s*(?:membayar|transfer|bayar|setor|deposit|top\s*up)|(?:transfer|bayar|setor)\s*(?:dulu|biaya|uang|deposit)|deposit\s*(?:awal|sebesar|rp|\d+)|(?:biaya|uang|dana)\s+(?:awal\s+)?(?:pendaftaran|registrasi|administrasi|keberangkatan|pengurusan\s+(?:visa|dokumen))[^.!?\n]{0,100}(?:rp\.?\s*[\d.,]+|\d[\d.,]*\s*(?:rb|ribu|juta))/i.test(cleaned)
+      ? /(?:wajib|harus|diminta)\s*(?:membayar|transfer|bayar|setor|deposit|top\s*up)|(?:transfer|bayar|setor)\s*(?:dulu|biaya|uang|deposit)|deposit\s*(?:awal|sebesar|rp|\d+)|(?:biaya|uang|dana)\s+(?:awal\s+)?(?:pendaftaran|registrasi|administrasi|keberangkatan|pengurusan\s+(?:visa|dokumen))[^.!?\n]{0,100}(?:rp\.?\s*[\d.,]+|\d[\d.,]*\s*(?:rb|ribu|juta))/i.test(normalized)
+      : ind.code === "R2"
+      ? (hasExtremeSalary && hasShortHours) || /(?:rp\.?\s*)?(?:[5-9]\d|[1-9]\d{2,})\s*(?:juta|jt)/i.test(normalized)
       : ind.code === "R6"
-      ? /(?:tugas|misi|like|subscribe|follow|rating)[^.!?\n]{0,120}(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)|(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)[^.!?\n]{0,120}(?:tugas|misi|like|subscribe|follow|rating)/i.test(cleaned)
+      ? /(?:tugas|misi|like|subscribe|follow|rating)[^.!?\n]{0,120}(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)|(?:top\s*up|deposit|setor(?:kan)?|transfer|bayar|modal|saldo)[^.!?\n]{0,120}(?:tugas|misi|like|subscribe|follow|rating)/i.test(normalized)
       : ind.code === "R9"
-        ? /(?:tanpa\s*(?:izin\s*)?(?:bp2mi|p3mi)|tidak\s*(?:terdaftar|berizin|terverifikasi).{0,35}(?:bp2mi|p3mi)|visa\s*(?:turis|kunjungan)|tppo|perdagangan\s*orang)/i.test(cleaned)
-          || (/(?:kamboja|cambodia|myanmar|laos)/i.test(cleaned)
-            && /(?:customer\s*service|\bcs\b|admin(?:istrasi)?|typing|telemarketing|operator)/i.test(cleaned)
-            && (/(?:jalur\s+khusus|visa\s*(?:turis|kunjungan)|tanpa\s*(?:izin|p3mi|bp2mi)|non.?prosedural|paspor\s+ditahan)/i.test(cleaned)
-              || (/(?:kirim|unggah|upload|serahkan)[^.!?\n]{0,45}(?:ktp|paspor|passport|identitas)/i.test(cleaned)
-                && /(?:sekarang\s+juga|hari\s+ini|mengamankan\s+(?:slot|posisi)|slot\s+terakhir|sisa\s*\d+\s*slot)/i.test(cleaned))
-              || /(?:\$|usd\s*)\s*(?:1[5-9]\d{2}|[2-9]\d{3,}|[1-9]\.\d{3})[^.!?\n]{0,40}(?:bulan|monthly)/i.test(cleaned)))
+        ? /(?:tanpa\s*(?:izin\s*)?(?:bp2mi|p3mi)|tidak\s*(?:terdaftar|berizin|terverifikasi).{0,35}(?:bp2mi|p3mi)|visa\s*(?:turis|kunjungan)|tppo|perdagangan\s*orang)/i.test(normalized)
+          || (/(?:kamboja|cambodia|myanmar|laos)/i.test(normalized)
+            && /(?:customer\s*service|\bcs\b|admin(?:istrasi)?|typing|telemarketing|operator)/i.test(normalized)
+            && (/(?:jalur\s+khusus|visa\s*(?:turis|kunjungan)|tanpa\s*(?:izin|p3mi|bp2mi)|non.?prosedural|paspor\s+ditahan)/i.test(normalized)
+              || (/(?:kirim|unggah|upload|serahkan)[^.!?\n]{0,45}(?:ktp|paspor|passport|identitas)/i.test(normalized)
+                && /(?:sekarang\s+juga|hari\s+ini|mengamankan\s+(?:slot|posisi)|slot\s+terakhir|sisa\s*\d+\s*slot)/i.test(normalized))
+              || /(?:\$|usd\s*)\s*(?:1[5-9]\d{2}|[2-9]\d{3,}|[1-9]\.\d{3})[^.!?\n]{0,40}(?:bulan|monthly)/i.test(normalized)))
       : ind.code === "R3"
-        ? /(?:otp|password|kata\s+sandi|pin\b|kode\s+verifikasi)/i.test(cleaned)
-          || (/(?:foto\s*)?(?:ktp|e-?ktp|paspor|passport|kartu\s+keluarga)/i.test(cleaned)
-            && /(?:kirim|unggah|upload|serahkan|lampirkan)/i.test(cleaned)
-            && /(?:sekarang\s+juga|hari\s+ini|mengamankan\s+(?:slot|posisi)|sebelum\s+interview)/i.test(cleaned))
+        ? /(?:otp|password|kata\s+sandi|pin\b|kode\s+verifikasi)/i.test(normalized)
+          || (/(?:foto\s*)?(?:ktp|e-?ktp|paspor|passport|kartu\s+keluarga)/i.test(normalized)
+            && /(?:kirim|unggah|upload|serahkan|lampirkan)/i.test(normalized)
+            && /(?:sekarang\s+juga|hari\s+ini|mengamankan\s+(?:slot|posisi)|sebelum\s+interview)/i.test(normalized))
         : true;
     if ((ind.code === "R6" || ind.code === "R9") && !hardFlagEvidence) {
       matches.length = 0;

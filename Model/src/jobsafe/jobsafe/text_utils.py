@@ -11,7 +11,27 @@ URL_RE = re.compile(rf"(?i)(?<![@\w.-])(?:https?://)?(?:www\.)?(?:[a-z0-9-]+\.)+
 SHORTENERS = ("bit.ly","tinyurl.com","s.id","cutt.ly","shorturl.at","rb.gy","t.ly","is.gd","lnkd.in","forms.gle","linktr.ee","wa.me","t.me")
 
 def fix_ocr_leetspeak(text: str) -> str:
-    """Normalizes common OCR character substitutions in Indonesian text (e.g., tr4nsfer -> transfer)."""
+    """Normalizes common OCR character substitutions, spacing glitches, and abbreviations in Indonesian text."""
+    # 1. Repair OCR spaced-out letters inside critical keywords (e.g. 'g a j i' -> 'gaji')
+    t = re.sub(r"\bg\s+a\s+j\s+i\b", "gaji", text, flags=re.I)
+    t = re.sub(r"\bb\s+i\s+a\s+y\s+a\b", "biaya", t, flags=re.I)
+    t = re.sub(r"\bk\s+e\s+r\s+j\s+a\b", "kerja", t, flags=re.I)
+    t = re.sub(r"\bj\s+u\s+t\s+a\b", "juta", t, flags=re.I)
+    t = re.sub(r"\br\s+i\s+b\s+u\b", "ribu", t, flags=re.I)
+    t = re.sub(r"\bp\s+e\s+n\s+d\s+a\s+f\s+t\s+a\s+r\s+a\s+n\b", "pendaftaran", t, flags=re.I)
+    t = re.sub(r"\br\s+e\s+k\s+e\s+n\s+i\s+n\s+g\b", "rekening", t, flags=re.I)
+    t = re.sub(r"\bd\s+e\s+p\s+o\s+s\s+i\s+t\b", "deposit", t, flags=re.I)
+    t = re.sub(r"\bw\s+h\s+a\s+t\s+s\s+a\s+p\s+p\b", "whatsapp", t, flags=re.I)
+    t = re.sub(r"\bw\s*[\.\/]\s*a\b", "whatsapp", t, flags=re.I)
+    t = re.sub(r"\bt\s+e\s+l\s+e\s+g\s+r\s+a\s+m\b", "telegram", t, flags=re.I)
+    t = re.sub(r"\bk\s*[\.\/]?\s*t\s*[\.\/]?\s*p\b", "ktp", t, flags=re.I)
+
+    # 2. Separate numbers and attached units (e.g. '100juta' -> '100 juta', '5jam' -> '5 jam')
+    t = re.sub(r"(\d+)\s*(juta|jt|jta|jeti)", r"\1 juta", t, flags=re.I)
+    t = re.sub(r"(\d+)\s*(ribu|rb|k)\b", r"\1 ribu", t, flags=re.I)
+    t = re.sub(r"(\d+)\s*(jam|jm)\b", r"\1 jam", t, flags=re.I)
+    t = re.sub(r"(\d+)\s*(menit|mnt)\b", r"\1 menit", t, flags=re.I)
+
     def _fix_word(match):
         w = match.group(0)
         if re.match(r"^(?:s[1-3]|d[1-4]|r\d{1,2}|jl|no)$", w, re.I):
@@ -24,10 +44,11 @@ def fix_ocr_leetspeak(text: str) -> str:
             w_sub = re.sub(r"(?<=[a-zA-Z])4(?=[a-zA-Z])|(?<=[a-zA-Z]{2})4|4(?=[a-zA-Z]{2})", "a", w_sub)
             w_sub = re.sub(r"(?<=[a-zA-Z])3(?=[a-zA-Z])|(?<=[a-zA-Z]{2})3|3(?=[a-zA-Z]{2})", "e", w_sub)
             w_sub = re.sub(r"(?<=[a-zA-Z])1(?=[a-zA-Z])|(?<=[a-zA-Z]{2})1|1(?=[a-zA-Z]{2})", "i", w_sub)
+            w_sub = re.sub(r"(?<=[a-zA-Z])5(?=[a-zA-Z])|(?<=[a-zA-Z]{2})5|5(?=[a-zA-Z]{2})", "s", w_sub)
             return w_sub
         return w
 
-    words = re.split(r"(\s+|[^\w\s])", text)
+    words = re.split(r"(\s+|[^\w\s])", t)
     processed = []
     for chunk in words:
         if "@" in chunk or "http" in chunk or "www." in chunk:
@@ -36,7 +57,16 @@ def fix_ocr_leetspeak(text: str) -> str:
             processed.append(re.sub(r"\b[a-zA-Z0-9]+\b", _fix_word, chunk))
         else:
             processed.append(chunk)
-    return "".join(processed)
+    res = "".join(processed)
+
+    # 3. Common abbreviations and OCR typos
+    res = re.sub(r"\b(?:jta|jeti|jeti2)\b", "juta", res, flags=re.I)
+    res = re.sub(r"\b(?:blaya|b1aya)\b", "biaya", res, flags=re.I)
+    res = re.sub(r"\b(?:pndftrn|pendftran)\b", "pendaftaran", res, flags=re.I)
+    res = re.sub(r"\b(?:watsap|wh4tsapp|wasap)\b", "whatsapp", res, flags=re.I)
+    res = re.sub(r"\b(?:telegrm|t3legram)\b", "telegram", res, flags=re.I)
+    res = re.sub(r"\b(?:rekk?)\b", "rekening", res, flags=re.I)
+    return res
 
 def clean(text: str) -> str:
     t = unicodedata.normalize("NFKC", str(text or "")).replace("\u200b", "")

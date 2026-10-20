@@ -1,4 +1,4 @@
-import { analyzeJobText } from "./analyzer";
+import { analyzeJobText, normalizeRecruitmentText } from "./analyzer";
 
 export interface IndicatorItem {
   code: string;
@@ -175,12 +175,13 @@ export async function analyzePhoto(file: File, fallbackText?: string): Promise<A
 }
 
 function normalizeOcrText(text: string) {
-  return text
+  const base = text
     .replace(/\r/g, "")
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, " ")
     .replace(/[ \t]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+  return normalizeRecruitmentText(base);
 }
 
 function ocrQualityScore(text: string, confidence: number, wordConfidence: number) {

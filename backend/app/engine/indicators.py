@@ -40,9 +40,12 @@ DEFAULT_INDICATORS: List[Dict[str, Any]] = [
             "penghasilan tak terbatas", "hanya 15 menit", "kerja santai gaji jutaan", "penghasilan 5-10 juta/minggu"
         ],
         "patterns": [
-            r"(?:penghasilan|gaji|komisi|upah)\s*(?:rp\s*)?(?:[3-9]\d{2}\.?\d{3}|[1-9]\.?\d{6})\s*(?:per\s*hari|/hari|harian|tiap\s*hari)",
-            r"(?:kerja|tugas)\s*(?:santai|mudah|ringan)\s*(?:gaji|penghasilan|dapat)\s*(?:jutaan|besar|melimpah)",
-            r"(?:hanya|cukup)\s*(?:modal\s*hp|punya\s*hp|rebahan|like\s*video)\s*(?:dapat|menghasilkan|hasilkan)\s*(?:rp|juta|\d+)",
+            r"(?:gaji|penghasilan|salary|upah|komisi|pendapatan|fee|dibayar|cair)[^.!?\n]{0,30}(?:rp\.?\s*)?(?:[1-9]\d{1,2}|\d{3,})\s*(?:juta|jt|\.000\.000)",
+            r"(?:rp\.?\s*)?(?:[3-9]\d|[1-9]\d{2,})\s*(?:juta|jt)\b",
+            r"(?:kerja|waktu\s*kerja)[^.!?\n]{0,25}(?:hanya|cuma|cukup)?\s*[1-5]\s*jam",
+            r"(?:penghasilan|gaji|komisi|upah)\s*(?:rp\s*)?(?:[2-9]\d{2}\.?\d{3}|[1-9]\.?\d{6}|\d+\s*(?:rb|ribu|juta|jt))\s*(?:per\s*hari|/hari|harian|tiap\s*hari|per\s*minggu|/minggu)",
+            r"(?:kerja|tugas)\s*(?:santai|mudah|ringan|fleksibel|dari\s*rumah)[^.!?\n]{0,35}(?:gaji|penghasilan|dapat)\s*(?:jutaan|besar|melimpah|\d+\s*(?:juta|jt))",
+            r"(?:hanya|cukup)\s*(?:modal\s*hp|punya\s*hp|rebahan|like\s*video|baca\s*berita|copy\s*paste)\s*(?:dapat|menghasilkan|hasilkan)\s*(?:rp|juta|\d+)",
             r"(?:profit|keuntungan)\s*(?:harian|langsung|cair\s*tiap\s*hari|instan)\s*(?:rp|\d+)"
         ]
     },
